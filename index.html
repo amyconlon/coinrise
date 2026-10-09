@@ -216,6 +216,9 @@ button:disabled{opacity:.4;cursor:default}
 .sumline .t{border-top:1px solid var(--grid);padding-top:6px;margin-top:2px;font-weight:600}
 .sumline .t b{color:var(--accent)}
 .sumline small{color:var(--muted);font-size:.76rem}
+.gform .lab{font-size:.74rem;color:var(--muted)}
+#gSpAges.off{opacity:.4;pointer-events:none}
+.growbox{border:1px dashed var(--grid);border-radius:14px;padding:10px 12px}
 .taxbox{border:1px dashed var(--grid);border-radius:14px;padding:10px 12px}
 .taxbox .bnote b{color:var(--ink);font-family:var(--mono)}
 .chk2{display:flex;gap:8px;align-items:center;font-size:.82rem;margin-top:8px;color:var(--ink)}
@@ -306,7 +309,7 @@ dialog a{color:var(--accent)}
         <div class="btot"><span>Total spending</span><b id="bMonth"></b><b id="bYear"></b></div>
       </details>
       <div class="f"><label for="gSaved">Main pension pot now (£)</label><input type="number" id="gSaved" inputmode="numeric" min="0" step="500" value="10000"></div>
-      <div class="f"><label for="gSpAge">State Pension from <output id="oSpAge"></output></label><input type="range" id="gSpAge" min="66" max="68" value="67"></div>
+      <div class="f"><span class="lab" id="spLab">State Pension from age</span><span class="chips" id="gSpAges" role="group" aria-labelledby="spLab"><button type="button" data-a="66">66</button><button type="button" data-a="67">67</button><button type="button" data-a="68">68</button></span><input type="hidden" id="gSpAge" value="67"><output id="oSpAge" hidden></output></div>
       <div class="f wide chk"><input type="checkbox" id="gSp" checked><label for="gSp" style="color:var(--ink);font-size:.82rem">Include the full new State Pension (£241.30 a week)</label></div>
       <details class="f wide others" id="gOthers">
         <summary>Other pensions &amp; income <span id="oOthers"></span></summary>
@@ -318,7 +321,14 @@ dialog a{color:var(--accent)}
           <div class="f wide"><label for="gOther">Other yearly income in retirement (£)<small>Rental income, part-time work, an annuity you already have</small></label><input type="number" id="gOther" inputmode="numeric" min="0" step="500" value="0"></div>
         </div>
       </details>
-      <div class="f wide"><span class="chips" id="gGrow">Growth after inflation <button type="button" data-g="0.02">Cautious 2%</button><button type="button" data-g="0.04">Middle 4%</button><button type="button" data-g="0.06">Hopeful 6%</button></span></div>
+      <div class="f wide rate growbox">
+        <label for="gRate">Investment growth a year</label>
+        <div><span class="val" id="oGRate"></span><span class="tag" id="gTag"></span></div>
+        <input type="range" id="gRate" min="0" max="12" step="0.5" value="6">
+        <label for="gInf" style="margin-top:6px">Inflation a year <output id="oInf"></output></label>
+        <input type="range" id="gInf" min="0" max="6" step="0.5" value="2">
+        <p class="bnote" id="gRateNote"></p>
+      </div>
       <div class="f wide"><span class="chips" id="gMode">How should your pot work? <button type="button" data-m="wr">Keep a cushion</button><button type="button" data-m="spend">Spend it all by an age</button></span></div>
       <div class="f wide" id="wrWrap"><span class="chips" id="gWr">Take out each year <button type="button" data-w="0.03">3%</button><button type="button" data-w="0.035">3.5%</button><button type="button" data-w="0.04">4%</button></span>
         <p class="bnote">Taking a modest % each year aims to leave money in the pot for as long as you live.</p></div>
@@ -384,9 +394,9 @@ dialog a{color:var(--accent)}
       <div class="f"><label for="lPot">Pot when you retire (£)</label><input type="number" id="lPot" inputmode="numeric" min="0" step="1000"></div>
       <div class="f"><label>&nbsp;</label><button class="ctl" id="lReset" type="button" style="padding:7px">Use my plan's pot</button></div>
       <div class="f wide rate">
-        <label for="lRate">Growth in retirement, after inflation</label>
+        <label for="lRate">Growth in retirement a year</label>
         <div><span class="val" id="oRate"></span><span class="tag" id="rateTag"></span></div>
-        <input type="range" id="lRate" min="0" max="10" step="0.5" value="2">
+        <input type="range" id="lRate" min="0" max="12" step="0.5" value="4">
         <p class="bnote" id="rateNote"></p>
       </div>
     </div>
@@ -482,7 +492,7 @@ dialog a{color:var(--accent)}
 
 <dialog id="aboutG">
   <h2>How the goal planner works</h2>
-  <p>It works backwards in three steps, all in <b>today's money</b>, so £25,000 means what £25,000 buys now. That's why growth is shown <i>after</i> inflation.</p>
+  <p>It works backwards in three steps, all in <b>today's money</b>, so £25,000 means what £25,000 buys now. You set growth before inflation and the inflation rate; the planner converts growth to <i>after</i> inflation.</p>
   <ul>
     <li><b>Spending goal:</b> what you want to spend each year, after tax. The planner works out the tax for you.</li>
     <li><b>From your pot:</b> what you'd need to take out each year, on top of your pensions and income, so that after tax you can spend your goal. The full new State Pension is £241.30 a week (about £12,548 a year). Many people get less, depending on their National Insurance record, so check your forecast at <a href="https://www.gov.uk/check-state-pension" target="_blank" rel="noopener">GOV.UK</a>.</li>
@@ -519,7 +529,7 @@ dialog a{color:var(--accent)}
   <p>This takes the pot from your plan and plays retirement forward one year at a time, in today's money.</p>
   <ul>
     <li>Each year you take out what you need minus the pensions and income being paid that year. Before your State Pension or final salary pension starts, you take out more; once they start, you take out less.</li>
-    <li>What's left grows at the rate you choose with the slider (0–10% a year), <b>after inflation</b>. "After inflation" means growth above rising prices: if investments grow 8% in a year when prices rise 3%, that's about 5% after inflation. For reference, world shares returned about 5.2% a year after inflation from 1900 to 2024, and bonds about 1.7% (<a href="https://www.jbs.cam.ac.uk/2025/report-stocks-have-far-outperformed-over-the-past-125-years/" target="_blank" rel="noopener">UBS Global Investment Returns Yearbook 2025</a>).</li>
+    <li>What's left grows at the rate you choose with the slider (0–12% a year). The planner takes off the inflation rate you set in Plan it, because everything is in today's money: if investments grow 8% in a year when prices rise 3%, that's about 5% after inflation. For reference, world shares returned about 5.2% a year after inflation from 1900 to 2024, and bonds about 1.7% (<a href="https://www.jbs.cam.ac.uk/2025/report-stocks-have-far-outperformed-over-the-past-125-years/" target="_blank" rel="noopener">UBS Global Investment Returns Yearbook 2025</a>).</li>
     <li>Real returns go up and down, and a run of bad years early in retirement can make money run out sooner than an average suggests.</li>
     <li>It runs to age 100 (or later if you chose to spend it all by a later age). Many people live into their 90s, so it's worth planning for a long retirement.</li>
     <li>It doesn't include tax on withdrawals beyond what your income goal already allows for, care costs, or one-off spending.</li>
@@ -684,7 +694,17 @@ const taxAt = (o, age, w) => incomeTax(incomeAt(o, age) + taxablePart(w, o));
 // Tax-free share of pension withdrawals: 25%, unless 25% of the pension pot would exceed the lump sum allowance.
 const tfFor = (pot, s) => { const pp = pot * (1 - s); return pp > 0 ? Math.min(.25, LSA / pp) : .25; };
 const SP_YEAR = 241.30 * 52;   // full new State Pension, £241.30 a week
-let G = 0.04, WR = 0.035;
+let WR = 0.035, NOM = 0.06, INF = 0.02, LNOM = 0.04;
+// Everything is planned in today's money, so growth is converted to "after inflation".
+const real = (n, i) => (1 + n) / (1 + i) - 1;
+let G = real(NOM, INF);
+function rateTag(el, r){
+  const p = r * 100;
+  if (p <= 3){ el.textContent = "Cautious"; el.className = "tag ok"; }
+  else if (p <= 5.5){ el.textContent = "Close to long-run average"; el.className = "tag"; }
+  else { el.textContent = "Optimistic"; el.className = "tag hi"; }
+}
+const pct1 = r => (+(r * 100).toFixed(1)) + "%";
 const gv = id => +$(id).value;
 function monthlyNeeded(pot, saved, years, g){
   if (years <= 0) return pot > saved ? Infinity : 0;
@@ -751,13 +771,18 @@ function drawGoal(){
   $("oOthers").textContent = extras.length ? extras.join(", ") : "none added";
   $("oAge").textContent = o.age; $("oRet").textContent = o.ret; $("oSpAge").textContent = o.spAge;
   $("oInc").textContent = money(o.inc);
-  $("gSpAge").disabled = !o.useSp;
-  $("gGrow").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.g === G));
+  $("gSpAges").classList.toggle("off", !o.useSp);
+  $("gSpAges").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.a === o.spAge));
+  $("gRate").value = +(NOM*100).toFixed(1); $("gInf").value = +(INF*100).toFixed(1);
+  $("oGRate").textContent = pct1(NOM) + " a year"; $("oInf").textContent = pct1(INF);
+  rateTag($("gTag"), G);
+  $("gRateNote").innerHTML = `With ${pct1(INF)} inflation, ${pct1(NOM)} growth is about <b>${pct1(G)} a year after inflation</b>. The planner uses that figure, because all amounts are in today's money. ` +
+    (G > 0.055 ? `That's optimistic: world shares averaged about 5.2% a year after inflation from 1900 to 2024 (UBS Global Investment Returns Yearbook 2025), and returns are never steady or guaranteed.` : `For reference, world shares averaged about 5.2% a year after inflation from 1900 to 2024 (UBS Global Investment Returns Yearbook 2025). Past returns don't guarantee future ones.`);
   $("gWr").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.w === WR));
   $("gMode").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === GMODE));
   $("wrWrap").hidden = GMODE !== "wr"; $("endWrap").hidden = GMODE !== "spend";
   $("oEnd").textContent = o.end;
-  $("endNote").innerHTML = `Your pot is sized to run out at ${o.end}, assuming ${Math.round(LG*100)}% growth in retirement (change it in Make it last). If you live longer, you'd rely on your State Pension and other pensions alone, so many people choose an age well past their life expectancy.`;
+  $("endNote").innerHTML = `Your pot is sized to run out at ${o.end}, assuming ${pct1(LNOM)} growth a year in retirement (change it in Make it last). If you live longer, you'd rely on your State Pension and other pensions alone, so many people choose an age well past their life expectancy.`;
 
   const p = plan(o);
   $("gHead").textContent = o.contrib > 0
@@ -783,10 +808,10 @@ function drawGoal(){
   $("taxNote").innerHTML = `With your savings ${heldName}, we estimate about <b>${money(p.tax)}</b> a year of income tax once all your pensions have started, so you'd take <b>${money(p.gap)}</b> a year from your pot to spend ${money(o.inc)}. ` +
     `For comparison: all in a pension <b>${money(pAll.tax)}</b>/yr, all in an ISA <b>${money(iAll.tax)}</b>/yr. ` +
     `Not sure? Choose Pension: it's the cautious choice because it assumes the most tax. Lower tax later doesn't make an ISA better: pensions usually get tax relief and employer money going in.`;
-  const lo = plan({...o, g:0.06}).m, hi = plan({...o, g:0.02}).m;
+  const lo = plan({...o, g:real(NOM + 0.02, INF)}).m, hi = plan({...o, g:real(Math.max(0, NOM - 0.02), INF)}).m;
   $("gRange").innerHTML = p.m === 0
-    ? `You look on track at ${Math.round(G*100)}% growth with what you've saved and pay in now. Try the cautious rate to test it.`
-    : `Between <b>${money(lo)}</b> (hopeful 6%) and <b>${money(hi)}</b> (cautious 2%) a month, depending on growth.`;
+    ? `You look on track at ${pct1(NOM)} growth with what you've saved and pay in now. Try a lower growth rate to test it.`
+    : `Between <b>${money(lo)}</b> (if growth is ${pct1(NOM + 0.02)}) and <b>${money(hi)}</b> (if ${pct1(Math.max(0, NOM - 0.02))}) a month.`;
   $("gGap").textContent = money(p.gap) + "/yr";
   $("gPot").textContent = kfmt(p.pot);
   $("gYears").textContent = p.years;
@@ -845,9 +870,9 @@ function drawGoal(){
   ];
   $("rList").innerHTML = rows.map(([k, v, hi]) => `<dt>${k}</dt><dd${hi ? ' class="hi"' : ""}>${v}</dd>`).join("");
   SUMMARY = `My retirement plan (Coinrise)\n` + rows.map(([k, v]) => `${k}: ${v}`).join("\n") +
-    `\nAssumes ${Math.round(G*100)}% growth after inflation while saving and ${Math.round(LG*100)}% in retirement. All in today's money. Example only, not financial advice.`;
+    `\nAssumes ${pct1(NOM)} growth a year while saving and ${pct1(LNOM)} in retirement, with ${pct1(INF)} inflation. All in today's money. Example only, not financial advice.`;
 }
-let PLAN = null, SUMMARY = "", lPotEdited = false, LG = 0.02, wasOnTrack = false, lastLasts = null;
+let PLAN = null, SUMMARY = "", lPotEdited = false, LG = real(0.04, 0.02), wasOnTrack = false, lastLasts = null;
 $("rCopy").onclick = async () => {
   const b = $("rCopy");
   try { await navigator.clipboard.writeText(SUMMARY); b.textContent = "Copied"; $("rFall").hidden = true; sfx.coin(4); buzz(10); }
@@ -875,15 +900,11 @@ function drawLast(){
   const o = {...PLAN.o};
   const pot = Math.max(0, +$("lPot").value || 0);
   o.tf = tfFor(pot, o.s);
-  const pct = +(LG * 100).toFixed(1);
-  $("lRate").value = pct; $("oRate").textContent = pct + "% a year";
-  const tag = $("rateTag");
-  if (pct <= 3){ tag.textContent = "Cautious"; tag.className = "tag ok"; }
-  else if (pct <= 5.5){ tag.textContent = "Close to long-run average"; tag.className = "tag"; }
-  else { tag.textContent = "Optimistic"; tag.className = "tag hi"; }
-  $("rateNote").textContent = pct > 5.5
-    ? `That's above what world shares have averaged after inflation: about 5.2% a year from 1900 to 2024 (UBS Global Investment Returns Yearbook 2025). Bonds averaged 1.7%. Most retirees hold a mix, and a figure like 8–10% is closer to returns before inflation. Use high rates to explore, not to plan.`
-    : `For reference: from 1900 to 2024, world shares returned about 5.2% a year after inflation and bonds about 1.7% (UBS Global Investment Returns Yearbook 2025). Past returns don't guarantee future ones.`;
+  $("lRate").value = +(LNOM * 100).toFixed(1); $("oRate").textContent = pct1(LNOM) + " a year";
+  rateTag($("rateTag"), LG);
+  $("rateNote").textContent = `With ${pct1(INF)} inflation (set in Plan it), that's about ${pct1(LG)} a year after inflation. ` + (LG > 0.055
+    ? `That's above what world shares have averaged after inflation: about 5.2% a year from 1900 to 2024 (UBS Global Investment Returns Yearbook 2025). Bonds averaged 1.7%. Most retirees hold a mix of shares and bonds. Use high rates to explore, not to plan.`
+    : `For reference: from 1900 to 2024, world shares returned about 5.2% a year after inflation and bonds about 1.7% (UBS Global Investment Returns Yearbook 2025). Past returns don't guarantee future ones.`);
   const dd = drawdown(o, pot, LG);
   const end = dd.rows[dd.rows.length - 1];
   const head = $("lHead");
@@ -921,10 +942,12 @@ function drawLast(){
 }
 $("lPot").addEventListener("input", () => { lPotEdited = true; drawLast(); });
 $("lReset").onclick = () => { lPotEdited = false; $("lPot").value = Math.round(PLAN.potAtRet); drawLast(); };
-$("lRate").addEventListener("input", e => { LG = +e.target.value / 100; drawGoal(); drawLast(); });
+$("lRate").addEventListener("input", e => { LNOM = +e.target.value / 100; LG = real(LNOM, INF); drawGoal(); drawLast(); });
 $("lAbout").onclick = () => $("aboutL").showModal();
-["gEnd","gAge","gRet","gInc","gSaved","gSpAge","gSp","gPots","gContrib","gDb","gDbAge","gOther", ...BILLS.map(b => b[0])].forEach(id => $(id).addEventListener("input", drawGoal));
-$("gGrow").onclick = e => { const b = e.target.closest("button"); if (!b) return; G = +b.dataset.g; drawGoal(); };
+$("gSpAges").onclick = e => { const b = e.target.closest("button"); if (!b) return; $("gSpAge").value = b.dataset.a; drawGoal(); };
+["gEnd","gAge","gRet","gInc","gSaved","gSp","gPots","gContrib","gDb","gDbAge","gOther", ...BILLS.map(b => b[0])].forEach(id => $(id).addEventListener("input", drawGoal));
+$("gRate").addEventListener("input", e => { NOM = +e.target.value / 100; G = real(NOM, INF); drawGoal(); });
+$("gInf").addEventListener("input", e => { INF = +e.target.value / 100; G = real(NOM, INF); LG = real(LNOM, INF); drawGoal(); });
 $("gWr").onclick = e => { const b = e.target.closest("button"); if (!b) return; WR = +b.dataset.w; drawGoal(); };
 $("gAbout").onclick = () => $("aboutG").showModal();
 

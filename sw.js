@@ -1,6 +1,6 @@
 // Coinrise: offline support.
 // Bump VERSION whenever you upload a new index.html so returning users get the update.
-const VERSION = "coinrise-v3";
+const VERSION = "coinrise-v5";
 const CORE = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
