@@ -1,0 +1,22 @@
+{
+  "name": "Coinrise",
+  "short_name": "Coinrise",
+  "description": "Watch money compound coin by coin, plan your retirement goal, and check how long your money will last.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0f26",
+  "theme_color": "#0a0f26",
+  "lang": "en-GB",
+  "categories": ["finance", "education"],
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "Plan my retirement", "url": "./#goal"},
+    {"name": "Will it last?", "url": "./#last"}
+  ]
+}
