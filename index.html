@@ -56,6 +56,8 @@ img{max-width:100%}
   color-scheme:dark;}
 html,body{height:100%}
 [hidden]{display:none!important}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+
 body{background:var(--bg) radial-gradient(120% 60% at 85% -10%, var(--glow) 0%, transparent 60%) no-repeat;color:var(--ink);font-family:var(--body);font-size:15px;margin:0;min-height:100%}
 #sky{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
@@ -208,6 +210,12 @@ button:disabled{opacity:.4;cursor:default}
 .btot{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;border-top:1px solid var(--grid);margin-top:10px;padding-top:8px;font-size:.84rem}
 .btot b{font:600 .9rem var(--mono)}
 .btot b:last-child{color:var(--muted);font-weight:400}
+.sumline{display:grid;gap:4px;font-size:.88rem}
+.sumline .r{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.sumline .r b{font-family:var(--mono);white-space:nowrap}
+.sumline .t{border-top:1px solid var(--grid);padding-top:6px;margin-top:2px;font-weight:600}
+.sumline .t b{color:var(--accent)}
+.sumline small{color:var(--muted);font-size:.76rem}
 .taxbox{border:1px dashed var(--grid);border-radius:14px;padding:10px 12px}
 .taxbox .bnote b{color:var(--ink);font-family:var(--mono)}
 .chk2{display:flex;gap:8px;align-items:center;font-size:.82rem;margin-top:8px;color:var(--ink)}
@@ -241,6 +249,16 @@ dialog p,dialog li{font-size:.88rem;max-width:62ch}
 dialog ul{padding-left:18px}
 dialog a{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){.stack,.mark,.bar{transition:none}}
+@media (min-width:900px){
+  .app{max-width:1180px;padding-inline:32px;gap:18px}
+  header{grid-template-columns:minmax(0,1fr) minmax(420px,560px);align-items:center;column-gap:40px}
+  .view{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:18px 32px;align-items:start;align-content:start}
+  .view > .hero{grid-column:1 / -1}
+  .hero h2{font-size:2.6rem}
+  .tower{height:clamp(320px,52vh,520px)}
+  #goal .gform{background:var(--panel);border:1px solid var(--grid);border-radius:18px;padding:18px}
+}
+@media (min-width:1300px){.app{max-width:1280px}}
 </style>
 </head>
 <body>
@@ -269,13 +287,14 @@ dialog a{color:var(--accent)}
   <!-- GOAL VIEW -->
   <section class="view" id="goal" hidden>
     <div class="hero"><h2>Plan your <em>rise</em></h2><p>Tell us the retirement you want. We'll work backwards to what you need to save each month.</p></div>
+    <div class="col col-a">
     <div class="gform">
       <div class="f"><label for="gAge">Your age now <output id="oAge"></output></label><input type="range" id="gAge" min="18" max="66" value="30"></div>
       <div class="f"><label for="gRet">Retire at <output id="oRet"></output></label><input type="range" id="gRet" min="40" max="75" value="67"></div>
       <div class="f wide"><span class="chips" id="gLife">The retirement you want
         <button type="button" data-l="min">Minimum</button><button type="button" data-l="mod">Moderate</button><button type="button" data-l="com">Comfortable</button><button type="button" data-l="bills">My bills</button><button type="button" data-l="custom">Set amount</button></span>
         <p class="bnote" id="lifeNote"></p></div>
-      <div class="f wide" id="incWrap"><label for="gInc">Money you want to spend each year, after tax <output id="oInc"></output></label><input type="range" id="gInc" min="8000" max="80000" step="500" value="25000"></div>
+      <div class="f wide" id="incWrap"><label for="gInc">Total you want to spend each year <output id="oInc"></output></label><input type="range" id="gInc" min="8000" max="80000" step="500" value="25000"></div>
       <div class="f wide taxbox" id="taxWrap">
         <span class="chips" id="gHeld">Where will your savings be? <button type="button" data-s="0">Pension</button><button type="button" data-s="0.5">Half &amp; half</button><button type="button" data-s="1">ISA</button></span>
         <p class="bnote" id="taxNote"></p>
@@ -307,6 +326,8 @@ dialog a{color:var(--accent)}
         <p class="bnote" id="endNote"></p></div>
     </div>
 
+    </div>
+    <div class="col col-b">
     <div class="note ans" aria-live="polite">
       <span class="k" id="gHead">To reach your goal, save about</span>
       <div class="big" id="gMonthly">£0 <small>a month</small></div>
@@ -314,7 +335,7 @@ dialog a{color:var(--accent)}
     </div>
 
     <div class="steps">
-      <div><span>Spend each year</span><b id="gSpend"></b></div>
+      <div><span>Total to spend</span><b id="gSpend"></b></div>
       <div><span>Pensions &amp; income</span><b id="gIncome"></b></div>
       <div><span>From your pot</span><b id="gGap"></b></div>
       <div><span>Est. tax</span><b id="gTax"></b></div>
@@ -322,6 +343,7 @@ dialog a{color:var(--accent)}
       <div><span>Years to save</span><b id="gYears"></b></div>
     </div>
 
+    <div class="note sumline" id="gSum" aria-live="polite"></div>
     <div class="stage proj">
       <h3><span>Your pot, year by year</span><span><i style="--c:var(--deposit)">You put in</i> <i style="--c:var(--simple)">Growth</i></span></h3>
       <div class="prow" id="prow"></div>
@@ -346,11 +368,13 @@ dialog a{color:var(--accent)}
       <span>All figures in today's money. Examples, not advice.</span>
       <span><button id="gAbout" type="button">How it works</button></span>
     </div>
+    </div>
   </section>
 
   <!-- LAST VIEW -->
   <section class="view" id="last" hidden>
     <div class="hero"><h2>Will your money <em>last</em>?</h2><p>Play your retirement forward, year by year, and see when the pot runs low.</p></div>
+    <div class="col col-a">
     <div class="note ans lhead" aria-live="polite">
       <span class="k">Taking out what your plan needs each year</span>
       <div class="big" id="lHead"></div>
@@ -366,6 +390,8 @@ dialog a{color:var(--accent)}
         <p class="bnote" id="rateNote"></p>
       </div>
     </div>
+    </div>
+    <div class="col col-b">
     <div class="stage proj">
       <h3><span>Pot left at each age</span><span><i style="--c:var(--simple)">Money left</i> <i style="--c:var(--warn)">Run out</i></span></h3>
       <div class="lrow" id="lrow"></div>
@@ -378,11 +404,13 @@ dialog a{color:var(--accent)}
       <span>All figures in today's money. Examples, not advice.</span>
       <span><button id="lAbout" type="button">How it works</button></span>
     </div>
+    </div>
   </section>
 
   <!-- MONEY VIEW -->
   <section class="view" id="money" hidden>
     <div class="hero"><h2>Watch <em>£100</em> grow</h2><p>Tap Next year and see how your gains start making gains of their own.</p></div>
+    <div class="col col-a">
     <div class="chips">
       <span class="grp" id="kGrp"><button type="button" data-k="inv">Investments</button><button type="button" data-k="sav">Savings</button></span>
       <span class="grp" id="rGrp"><span id="rLbl">Growth a year</span>
@@ -404,13 +432,15 @@ dialog a{color:var(--accent)}
       <span><i class="ring"></i><span id="lgR">Growth on past gains</span></span>
     </div>
 
-    <div class="note" id="mnote" aria-live="polite"></div>
-
     <div class="mctl">
       <button class="ctl" id="back" type="button" aria-label="Back one year">−1</button>
       <button class="ctl" id="play" type="button" aria-label="Play">▶</button>
       <button class="ctl primary" id="addYear" type="button">Next year</button>
     </div>
+
+    </div>
+    <div class="col col-b">
+    <div class="note" id="mnote" aria-live="polite"></div>
 
     <div class="stage bars">
       <h3><span>Added each year</span><span id="barMax"></span></h3>
@@ -421,6 +451,7 @@ dialog a{color:var(--accent)}
     <div class="foot">
       <span>Example rates, not a forecast or advice.</span>
       <span><button id="mAbout" type="button">How it works</button> · <button id="mReset" type="button">Start again</button></span>
+    </div>
     </div>
   </section>
 
@@ -708,9 +739,9 @@ function drawGoal(){
   $("gLife").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l === LIFE));
   $("incWrap").hidden = !custom;
   $("gHeld").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.s === HELD));
-  $("lifeNote").textContent = custom ? "Set what you want to spend each year, in today's money. We'll work out any tax for you."
+  $("lifeNote").textContent = custom ? "Your total spending for the year, in today's money. Your State Pension and other pensions count towards it, and we work out any tax for you."
     : LIFE === "bills" ? `Your bills come to ${money(billYear)} a year. Edit them in "Work it out from your bills" below.`
-    : `${LIFE_NAME[LIFE]} lifestyle: about ${money(spend)} a year of spending for one person (PLSA Retirement Living Standards). Assumes you own your home outright.`;
+    : `${LIFE_NAME[LIFE]} lifestyle: about ${money(spend)} a year of spending for one person (PLSA Retirement Living Standards). Assumes you own your home outright. Your State Pension and other pensions count towards this.`;
   const o = {age:gv("gAge"), ret:gv("gRet"), inc:incGoal, saved:num("gSaved") + num("gPots"),
              spAge:gv("gSpAge"), useSp:$("gSp").checked, g:G, wr:WR,
              mode:GMODE, end:Math.max(gv("gEnd"), gv("gRet") + 1), lg:LG,
@@ -740,6 +771,13 @@ function drawGoal(){
   $("gIncome").textContent = money(p.income) + "/yr";
   $("gSpend").textContent = money(o.inc) + "/yr";
   $("gTax").textContent = money(p.tax) + "/yr";
+  const steadyAge = Math.max(o.ret, o.useSp ? o.spAge : 0, o.db > 0 ? o.dbAge : 0);
+  const incParts = [o.useSp ? "State Pension" : "", o.db ? "final salary pension" : "", o.other ? "other income" : ""].filter(Boolean).join(", ") || "none added";
+  $("gSum").innerHTML = `<div class="r"><span>Pensions &amp; income <small>(${incParts})</small></span><b>${money(p.income)}</b></div>
+    <div class="r"><span>+ From your pot</span><b>${money(p.gap)}</b></div>
+    <div class="r"><span>− Income tax</span><b>${money(p.tax)}</b></div>
+    <div class="r t"><span>= Total to spend each year</span><b>${money(p.income + p.gap - p.tax)}</b></div>
+    <small>From age ${steadyAge}, once all your pensions have started.${steadyAge > o.ret ? " Before then, more comes from your pot." : ""}</small>`;
   const pAll = HELD === 0 ? p : plan({...o, s:0}), iAll = HELD === 1 ? p : plan({...o, s:1});
   const heldName = {0:"in a pension", 0.5:"split between a pension and an ISA", 1:"in an ISA"}[HELD];
   $("taxNote").innerHTML = `With your savings ${heldName}, we estimate about <b>${money(p.tax)}</b> a year of income tax once all your pensions have started, so you'd take <b>${money(p.gap)}</b> a year from your pot to spend ${money(o.inc)}. ` +
@@ -796,7 +834,7 @@ function drawGoal(){
   const dd = drawdown(PLAN.o, PLAN.potAtRet, LG);
   const rows = [
     ["Lifestyle", LIFE_NAME[LIFE]],
-    ["Spending goal (after tax)", money(o.inc) + " a year"],
+    ["Total spending goal", money(o.inc) + " a year (after tax)"],
     ["Savings held", {0:"Pension", 0.5:"Half pension, half ISA", 1:"ISA"}[HELD]],
     ["Est. tax in retirement", money(p.tax) + " a year"],
     ["Retire at", o.ret],
@@ -911,7 +949,7 @@ const coinsAt = y => Math.round(total(y) / COIN);
 // Coins keep one fixed size; the stack scrolls up as it grows, so nothing shrinks.
 function drawTower(animate){
   const tw = $("tw"), box = $("tower");
-  const cs = Math.max(8, Math.floor((box.clientWidth * 0.62 - 20) / 20));
+  const cs = Math.min(22, Math.max(8, Math.floor((box.clientWidth * 0.62 - 20) / 20)));
   tw.style.setProperty("--cs", cs + "px");
   const coins = (cls, k) => `<span class="c ${cls}"></span>`.repeat(k);
   const bluePer = Math.round(START * R / COIN);
