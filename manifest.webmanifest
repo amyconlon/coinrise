@@ -6,8 +6,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0a0f26",
-  "theme_color": "#0a0f26",
+  "background_color": "#F7F5F0",
+  "theme_color": "#0F7C78",
   "lang": "en-GB",
   "categories": ["finance", "education"],
   "icons": [
