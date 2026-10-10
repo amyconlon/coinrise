@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Which Boiler Is Right for You?</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a boiler's front panel. A slate header holds the flame and a radiator whose fins warm up as you answer.
+   One question per screen, answers as big rows. The result reads like a job card. Colours come from BRAND settings. */
+:root{
+  --brand:#2F3A45; --brand-ink:#FFFFFF; --flame:#E8702A; --flame-ink:#FFFFFF;
+  --ember:#FDEBDD; --bg:#EDF0F2; --card:#FFFFFF; --ink:#1D242B; --muted:#56616C; --line:#D9DEE3; --cool:#C7CFD6;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Atkinson Hyperlegible",system-ui,sans-serif;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);margin:0}
+.wrap{max-width:680px;margin:0 auto;padding:16px 16px 48px}
+button{font-family:inherit}
+button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--flame);outline-offset:2px}
+
+/* Header panel */
+.panel{background:var(--brand);color:var(--brand-ink);border-radius:20px;padding:18px 18px 16px;display:grid;gap:14px}
+.firm{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.9rem}
+.firm svg{flex:none}
+.demo{font-size:.7rem;font-weight:700;background:rgba(255,255,255,.16);padding:2px 9px;border-radius:999px;margin-left:auto}
+.panel h1{font:800 clamp(1.6rem,6.4vw,2.2rem)/1.04 var(--display);margin:0;letter-spacing:-.015em;text-wrap:balance;max-width:18ch}
+.panel p{margin:0;font-size:.95rem;opacity:.88;max-width:46ch}
+
+/* Radiator progress: one fin per question, warms to flame orange once answered */
+.rad{display:flex;align-items:flex-end;gap:5px;height:46px;padding:0 4px;position:relative}
+.rad::before{content:"";position:absolute;left:0;right:0;top:6px;height:4px;border-radius:2px;background:rgba(255,255,255,.18)}
+.rad::after{content:"";position:absolute;left:0;right:0;bottom:6px;height:4px;border-radius:2px;background:rgba(255,255,255,.18)}
+.fin{flex:1;height:100%;border-radius:7px;background:rgba(255,255,255,.12);position:relative;z-index:1;transition:background .35s}
+.fin.done{background:var(--flame)}
+.fin.now{background:rgba(255,255,255,.4)}
+.progtxt{display:flex;justify-content:space-between;font-size:.82rem;opacity:.85;margin-top:-6px}
+.progtxt button{background:none;border:0;color:inherit;text-decoration:underline;font-size:.82rem;cursor:pointer;padding:10px 0;margin:-10px 0;min-height:44px}
+
+/* Question */
+.q{margin-top:22px}
+.q h2{font:800 1.45rem/1.15 var(--display);margin:0 0 4px;letter-spacing:-.01em}
+.q h2:focus{outline:none}
+.q .help{color:var(--muted);margin:0 0 14px;font-size:.95rem}
+.q h3{font:600 1.05rem var(--display);margin:22px 0 4px}
+.opts{display:grid;gap:8px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;text-align:left;background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;font-size:1rem;transition:border-color .15s,background .15s}
+.opt:hover{border-color:var(--cool)}
+.opt .dot{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--cool);display:grid;place-items:center}
+.opt .t{display:grid;gap:1px;min-width:0}
+.opt b{font-weight:700}
+.opt small{color:var(--muted);font-size:.86rem;line-height:1.35}
+.opt[aria-pressed="true"]{border-color:var(--flame);background:var(--ember)}
+.opt[aria-pressed="true"] .dot{border-color:var(--flame);background:var(--flame);box-shadow:inset 0 0 0 4px var(--ember)}
+.opts.two{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.hints{margin-top:12px;background:var(--card);border:1.5px dashed var(--cool);border-radius:14px;padding:14px;font-size:.92rem}
+.hints p{margin:0 0 8px}
+.hints dl{margin:0;display:grid;gap:8px}
+.hints dt{font-weight:700}
+.hints dd{margin:0;color:var(--muted)}
+.nav{display:flex;gap:10px;margin-top:20px}
+.btn{min-height:48px;border-radius:12px;padding:12px 18px;font-weight:700;font-size:1rem;cursor:pointer;border:1.5px solid var(--brand);background:var(--card);color:var(--brand)}
+.btn.go{background:var(--brand);color:var(--brand-ink);margin-left:auto}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Result */
+.res{margin-top:22px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.res h2:focus{outline:none}
+.pick{background:var(--card);border-radius:18px;border:1.5px solid var(--line);overflow:hidden}
+.pick .top{background:var(--ember);padding:16px;display:grid;gap:6px;border-bottom:1.5px solid #F5D2B8}
+.pick .lbl{font-size:.88rem;color:#8A3E10;font-weight:700}
+.pick h2{font:800 clamp(1.7rem,7vw,2.3rem)/1.02 var(--display);margin:0;letter-spacing:-.02em}
+.kw{display:inline-flex;align-self:start;justify-self:start;align-items:center;gap:6px;background:var(--brand);color:var(--brand-ink);border-radius:999px;padding:4px 12px;font-weight:700;font-size:.88rem}
+.pick .body{padding:14px 16px 16px}
+.why{margin:0;padding-left:20px;display:grid;gap:6px}
+.alt{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px}
+.alt h3{font:600 1.05rem var(--display);margin:0 0 4px}
+.alt p{margin:0;color:var(--muted);font-size:.94rem}
+.sec h3{font:800 1.2rem var(--display);margin:6px 0 8px}
+.tiers{display:grid;gap:8px}
+.tier{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 12px;align-items:baseline}
+.tier b{font:800 1.1rem var(--display)}
+.tier .pr{font:800 1.25rem var(--display);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.tier small{color:var(--muted);font-size:.88rem;flex-basis:100%}
+.tier.mid{border-color:var(--flame);border-width:2px}
+.tier .tag{font-size:.75rem;font-weight:700;background:var(--flame);color:var(--flame-ink);border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:2px;font-family:var(--body)}
+.break{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin:0;font-size:.94rem;font-variant-numeric:tabular-nums;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px}
+.break dt{color:var(--muted)} .break dd{margin:0;text-align:right;font-weight:700}
+.inc{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.inc li{display:flex;gap:10px;align-items:flex-start}
+.inc li::before{content:"";flex:none;width:18px;height:18px;margin-top:3px;border-radius:5px;background:var(--flame) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M4.5 9.2l3 3 6-6.4' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat}
+.note{font-size:.9rem;background:var(--card);border-left:4px solid var(--cool);border-radius:0 10px 10px 0;padding:10px 12px;margin:0}
+.cta{display:block;text-align:center;text-decoration:none;background:var(--flame);color:var(--flame-ink);font:800 1.1rem var(--display);padding:15px;border-radius:14px;min-height:52px}
+.ghost{display:block;width:100%;min-height:48px;background:var(--card);color:var(--brand);border:1.5px solid var(--brand);font-weight:700;font-size:1rem;padding:12px;border-radius:14px;cursor:pointer}
+.row{display:grid;gap:8px}
+textarea.copy{width:100%;min-height:150px;font:.82rem/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:10px}
+.small{font-size:.8rem;color:var(--muted);line-height:1.5;margin:0}
+.ph{background:#FFF4D6;border:1px dashed #E2C26E;border-radius:6px;padding:1px 6px;color:#6B5413}
+.embedded .wrap{padding-bottom:16px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="panel">
+    <div class="firm">
+      <svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true"><path id="flameOuter" d="M13 1c1.6 5-4 7.6-4 12.6 0 1.7.8 3 1.8 3.7-.5-2.6 1.4-4.7 3-6.3.7 3 4.3 4.4 4.3 8.6 0 1.6-.6 3-1.6 4 3.6-1 6.5-4.5 6.5-9C23 7.5 15.8 5.4 13 1Z" fill="currentColor"/><path d="M13 29C7 29 2.6 25.2 2.6 19.6c0-3.5 1.7-6 3.7-7.6-.3 3.6 1.6 6.6 4.6 7.8C10.6 23 11.6 26 15 26.6c-.6 1.5-1.2 2.2-2 2.4Z" fill="currentColor" opacity=".55"/></svg>
+      <span id="firmName">Example Heating &amp; Plumbing</span><span class="demo" id="demoTag">Demo</span>
+    </div>
+    <h1>Which boiler is right for your home?</h1>
+    <p>Answer seven quick questions. We'll suggest a boiler type and size, with a rough installed price.</p>
+    <div class="rad" id="rad" aria-hidden="true"></div>
+    <div class="progtxt"><span id="progLabel" aria-live="polite">Question 1 of 7</span><button type="button" id="restartTop">Start again</button></div>
+  </header>
+
+  <main id="stage"></main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const state = {step:0, a:{}};
+
+// The questions. Option ids are used by RULES and PRICES further down.
+const STEPS = [
+  {key:"current", q:"What do you have now?", help:"Pick the closest match. Not sure? Tap it and we'll explain.",
+   opts:[
+    {v:"combi",   t:"Combi boiler", s:"No hot water tank. Hot water comes straight from the boiler."},
+    {v:"system",  t:"System boiler", s:"A hot water cylinder in a cupboard, but no tanks in the loft."},
+    {v:"regular", t:"Regular (heat-only) boiler", s:"A hot water cylinder plus water tanks in the loft."},
+    {v:"notsure", t:"Not sure", s:"We'll show some simple ways to tell."},
+    {v:"none",    t:"No boiler / new build", s:"Nothing there yet, or it's being fitted for the first time."}]},
+  {key:"beds", q:"How many bedrooms?", help:"This helps us size the boiler for your heating.",
+   opts:[{v:"1-2",t:"1 to 2"},{v:"3",t:"3"},{v:"4",t:"4"},{v:"5+",t:"5 or more"}]},
+  {key:"baths", q:"How many showers or baths might run at the same time?", help:"Count bathrooms, en-suites and showers that could be on together, say on a busy morning.",
+   opts:[{v:"1",t:"1",s:"Only one at a time"},{v:"2",t:"2"},{v:"3+",t:"3 or more"}]},
+  {key:"people", q:"How many people live in the home?", help:"More people usually means more hot water at once.",
+   opts:[{v:"1-2",t:"1 to 2"},{v:"3-4",t:"3 to 4"},{v:"5+",t:"5 or more"}]},
+  {key:"fuel", q:"What fuel does your boiler use?", help:"Most homes in towns are on mains gas.",
+   opts:[{v:"gas",t:"Mains gas",s:"You get a gas bill and have a gas meter."},{v:"lpg",t:"LPG",s:"Bottled or tank gas, often in rural homes."},{v:"oil",t:"Oil",s:"An oil tank outside, usually in the garden."},{v:"notsure",t:"Not sure"}]},
+  {key:"move", q:"Where will the new boiler go?", help:"Moving a boiler means new pipework and often a new flue.",
+   opts:[{v:"same",t:"Same place",s:"Swap it where the old one is"},{v:"move",t:"Somewhere new",s:"Move it to a different spot"}],
+   extra:{key:"loft", q:"Is it (or will it be) in the loft?", optional:true,
+     opts:[{v:"no",t:"No"},{v:"yes",t:"Yes, in the loft"}]}},
+  {key:"priority", q:"What matters most to you?", help:"We'll lean our suggestion towards this.",
+   opts:[{v:"upfront",t:"Lowest upfront cost",s:"Keep the bill down today"},{v:"warranty",t:"Reliability and a long warranty",s:"Fewer worries for longer"},{v:"running",t:"Lowest running costs",s:"Spend less on fuel each year"}]}
+];
+
+const HINTS = `<p>Some quick ways to tell:</p><dl>
+  <dt>Combi</dt><dd>No hot water tank anywhere. Hot water comes on as soon as you turn a tap.</dd>
+  <dt>System</dt><dd>A tall cylinder (often in an airing cupboard), but the loft has no water tanks.</dd>
+  <dt>Regular</dt><dd>A cylinder in a cupboard and one or two water tanks up in the loft.</dd>
+</dl><p style="margin:8px 0 0">Still not sure? Carry on. The engineer will check on the survey.</p>`;
+
+function label(step, v){ const o = (step.opts || []).find(x => x.v === v); return o ? o.t : "-"; }
+function stepByKey(k){ for (const s of STEPS){ if (s.key === k) return s; if (s.extra && s.extra.key === k) return s.extra; } }
+
+function renderProgress(){
+  const n = STEPS.length, done = state.step >= n;
+  $("rad").innerHTML = STEPS.map((s, i) => `<span class="fin ${i < state.step ? "done" : i === state.step ? "now" : ""}"></span>`).join("");
+  $("progLabel").textContent = done ? "All done. Here's our suggestion" : `Question ${state.step + 1} of ${n}`;
+}
+
+function optBtns(step, cur){
+  return step.opts.map(o => `<button type="button" class="opt" data-k="${step.key}" data-v="${o.v}" aria-pressed="${cur === o.v}">
+    <span class="dot" aria-hidden="true"></span><span class="t"><b>${o.t}</b>${o.s ? `<small>${o.s}</small>` : ""}</span></button>`).join("");
+}
+
+function render(focus){
+  renderProgress();
+  if (state.step >= STEPS.length) return renderResult(focus);
+  const s = STEPS[state.step], cur = state.a[s.key];
+  const short = s.opts.every(o => !o.s);
+  let html = `<section class="q"><h2 id="qh" tabindex="-1">${s.q}</h2><p class="help">${s.help}</p>
+    <div class="opts ${short ? "two" : ""}" role="group" aria-labelledby="qh">${optBtns(s, cur)}</div>`;
+  if (s.key === "current" && cur === "notsure") html += `<div class="hints">${HINTS}</div>`;
+  if (s.extra) html += `<h3 id="qh2">${s.extra.q} <span style="font-weight:400;color:var(--muted);font-size:.9rem">(optional)</span></h3>
+    <div class="opts two" role="group" aria-labelledby="qh2">${optBtns(s.extra, state.a[s.extra.key])}</div>`;
+  html += `<div class="nav">${state.step > 0 ? `<button type="button" class="btn" data-nav="back">Back</button>` : ""}
+    <button type="button" class="btn go" data-nav="next" ${cur ? "" : "disabled"}>${state.step === STEPS.length - 1 ? "See my result" : "Next"}</button></div></section>`;
+  $("stage").innerHTML = html;
+  if (focus) $("qh").focus({preventScroll:true});
+}
+
+let advanceTimer = null;
+$("stage").addEventListener("click", e => {
+  const o = e.target.closest(".opt");
+  if (o){
+    const k = o.dataset.k; state.a[k] = (k === "loft" && state.a[k] === o.dataset.v) ? undefined : o.dataset.v;
+    const s = STEPS[state.step];
+    render(false);
+    const focusSame = $("stage").querySelector(`.opt[data-k="${k}"][data-v="${o.dataset.v}"]`); if (focusSame) focusSame.focus();
+    // Single-question steps move on by themselves, except "Not sure" (so the hints can be read) and steps with an extra question.
+    clearTimeout(advanceTimer);
+    if (!s.extra && !(k === "current" && o.dataset.v === "notsure")) advanceTimer = setTimeout(() => go(1), 260);
+    return;
+  }
+  const n = e.target.closest("[data-nav]");
+  if (n){
+    if (n.dataset.nav === "back") go(-1);
+    if (n.dataset.nav === "next") go(1);
+    if (n.dataset.nav === "restart") restart();
+    if (n.dataset.nav === "copy") copyDetails(n);
+  }
+});
+function go(d){ clearTimeout(advanceTimer); state.step = Math.max(0, Math.min(STEPS.length, state.step + d)); render(true); }
+function restart(){ clearTimeout(advanceTimer); state.step = 0; state.a = {}; render(true); }
+$("restartTop").onclick = restart;
+
+/* ---------- Recommendation logic: reads RULES, never hard-codes them ---------- */
+function recommend(a){
+  const R = RULES;
+  const baths = a.baths, people = a.people, beds = a.beds;
+  const suitsCombi = R.combiBathrooms.includes(baths) && !R.combiAvoidPeople.includes(people) && !R.combiAvoidBeds.includes(beds);
+  const why = [];
+  let type, alt;
+  const cur = a.current;
+
+  if (cur === "regular" && (a.priority === "upfront" || R.keepRegularWhenBathrooms.includes(baths) && a.priority !== "running")){
+    type = "regular"; alt = suitsCombi ? "combi" : "system";
+    why.push(R.why.keepRegular);
+    if (a.priority === "upfront") why.push(R.why.upfrontKeep);
+  } else if (suitsCombi){
+    type = "combi"; alt = cur === "regular" ? "regular" : "system";
+    why.push(R.why.combiFits);
+    if (a.priority === "running") why.push(R.why.combiRunning);
+    if (cur === "regular" || cur === "system") why.push(R.why.convertSpace);
+  } else {
+    type = "system"; alt = cur === "regular" ? "regular" : "combi";
+    why.push(R.why.systemFits);
+    if (R.combiBathrooms.includes(baths)) why.push(R.why.bigHousehold);
+    if (cur === "regular") why.push(R.why.regularToSystem);
+  }
+  // A system owner who wants the lowest upfront cost: keep a like-for-like swap.
+  if (cur === "system" && type === "combi" && a.priority === "upfront"){ type = "system"; alt = "combi"; why.length = 0; why.push(R.why.keepSystem, R.why.upfrontKeep); }
+  if (a.priority === "warranty") why.push(R.why.warranty);
+  if (cur === "notsure") why.push(R.why.notSure);
+  return {type, alt, why: why.slice(0, 4), size: sizeBand(type, a)};
+}
+
+function sizeBand(type, a){
+  const bands = type === "combi" ? RULES.combiSizes : RULES.heatOnlySizes;
+  return bands.find(b => b.when(a)) || bands[bands.length - 1];
+}
+
+function priceFor(rec, a){
+  const P = PRICES, lines = [];
+  const conv = (P.conversion[a.current] || {})[rec.type] || 0;
+  const extras = [];
+  extras.push(["Size: " + rec.size.label, P.sizeAdjust[rec.size.id] || 0]);
+  if (a.current === "none") extras.push(["New installation (pipework, flue, gas or fuel supply)", P.newInstall]);
+  else if (conv) extras.push([`Changing from ${TYPE_NAME[a.current].toLowerCase()} to ${TYPE_NAME[rec.type].toLowerCase()}`, conv]);
+  if (a.move === "move") extras.push(["Moving the boiler to a new spot", P.relocation]);
+  if (a.loft === "yes") extras.push(["Loft installation (access, boarding, light)", P.loftInstall]);
+  if (P.fuelAdjust[a.fuel]) extras.push([FUEL_NAME[a.fuel] + " boiler and fittings", P.fuelAdjust[a.fuel]]);
+  const extraTotal = extras.reduce((t, x) => t + x[1], 0);
+  const tiers = Object.keys(P.tiers).map(k => {
+    const t = P.tiers[k], base = P.base[rec.type][k], total = base + extraTotal;
+    return {k, name:t.name, desc:t.desc, warranty:t.warrantyYears, base, lo: round(total * P.rangeLow), hi: round(total * P.rangeHigh)};
+  });
+  return {tiers, extras: extras.filter(x => x[1] > 0), conv};
+}
+function round(v){ return Math.max(PRICES.roundTo, Math.round(v / PRICES.roundTo) * PRICES.roundTo); }
+const gbp = v => "£" + Math.round(v).toLocaleString("en-GB");
+
+let SUMMARY = "";
+function renderResult(focus){
+  const a = state.a, rec = recommend(a), pr = priceFor(rec, a), I = INCLUDED;
+  const altText = RULES.altText[rec.alt];
+  const mid = pr.tiers[1] || pr.tiers[0];
+  const notes = [];
+  if (a.current === "notsure") notes.push(RULES.notes.notSureCurrent);
+  if (a.fuel === "notsure") notes.push(RULES.notes.notSureFuel);
+  if (a.current === "none") notes.push(RULES.notes.newBuild);
+
+  $("stage").innerHTML = `<section class="res" aria-live="polite">
+    <div class="pick">
+      <div class="top"><span class="lbl">Our suggestion for your home</span>
+        <h2 id="qh" tabindex="-1">${TYPE_NAME[rec.type]} boiler</h2>
+        <span class="kw">${rec.size.label}</span></div>
+      <div class="body"><ul class="why">${rec.why.map(w => `<li>${w}</li>`).join("")}</ul></div>
+    </div>
+    <div class="alt"><h3>Also worth considering: ${TYPE_NAME[rec.alt].toLowerCase()} boiler</h3><p>${altText}</p></div>
+    ${notes.map(n => `<p class="note">${n}</p>`).join("")}
+    <div class="sec"><h3>Rough installed price</h3>
+      <div class="tiers">${pr.tiers.map((t, i) => `<div class="tier ${i === 1 ? "mid" : ""}"><b>${t.name}${i === 1 ? '<span class="tag">Popular</span>' : ""}</b><span class="pr">${gbp(t.lo)} – ${gbp(t.hi)}</span>
+        <small>${t.warranty}-year warranty. ${t.desc}</small></div>`).join("")}</div></div>
+    <div class="sec"><h3>How we worked this out</h3>
+      <dl class="break"><dt>${TYPE_NAME[rec.type]} boiler, fitted (from)</dt><dd>${gbp(pr.tiers[0].base)}</dd>
+      ${pr.extras.map(([k, v]) => `<dt>${k}</dt><dd>+ ${gbp(v)}</dd>`).join("")}
+      <dt>Range allows for what the survey finds</dt><dd>−${Math.round((1 - PRICES.rangeLow) * 100)}% to +${Math.round((PRICES.rangeHigh - 1) * 100)}%</dd></dl></div>
+    <div class="sec"><h3>What's included</h3><ul class="inc">${I.map(x => `<li>${x}</li>`).join("")}</ul></div>
+    <div class="row">
+      <a class="cta" href="${BRAND.bookingUrl}" target="_blank" rel="noopener">${BRAND.bookingLabel}</a>
+      <button type="button" class="ghost" data-nav="copy" id="copyBtn">Copy my details</button>
+      <textarea class="copy" id="copyBox" readonly hidden aria-label="Your details to copy"></textarea>
+      <div class="nav" style="margin-top:4px"><button type="button" class="btn" data-nav="back">Back</button>
+      <button type="button" class="btn" data-nav="restart" style="margin-left:auto">Start again</button></div>
+    </div>
+    <p class="small">Prefer to talk? Call ${BRAND.phone}.</p>
+    <p class="small">${BRAND.smallprint}${a.fuel !== "oil" ? " " + BRAND.gasSafeNote : ""} ${BRAND.demo ? '<span class="ph">Demo prices: each business sets its own.</span>' : ""}</p>
+  </section>`;
+
+  const ans = k => label(stepByKey(k), a[k]);
+  SUMMARY = `Boiler enquiry for ${BRAND.name}\n` +
+    `Current boiler: ${ans("current")}\nBedrooms: ${ans("beds")}\nShowers/baths at once: ${ans("baths")}\nPeople: ${ans("people")}\n` +
+    `Fuel: ${ans("fuel")}\nBoiler location: ${ans("move")}${a.loft ? ", loft: " + ans("loft").toLowerCase() : ""}\nWhat matters most: ${ans("priority")}\n` +
+    `Suggested: ${TYPE_NAME[rec.type]} boiler, ${rec.size.label}\nAlternative: ${TYPE_NAME[rec.alt]} boiler\n` +
+    pr.tiers.map(t => `${t.name} (${t.warranty}-yr warranty): ${gbp(t.lo)} – ${gbp(t.hi)}`).join("\n") +
+    `\nEstimate only. Final price after a survey.`;
+  if (focus) $("qh").focus({preventScroll:true});
+}
+
+async function copyDetails(b){
+  const done = msg => { b.textContent = msg; setTimeout(() => b.textContent = "Copy my details", 3000); };
+  try { await navigator.clipboard.writeText(SUMMARY); $("copyBox").hidden = true; done("Copied. Paste it into your booking message"); }
+  catch (e) {
+    const t = $("copyBox"); t.value = SUMMARY; t.hidden = false; t.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e2) {}
+    done(ok ? "Copied. Paste it into your booking message" : "Select and copy the text below");
+  }
+}
+
+/* ============ BRAND & PRICE SETTINGS: each business edits these ============ */
+const BRAND = {
+  name: "Example Heating & Plumbing",       // invented demo business
+  demo: true,                               // shows the "Demo" badge
+  colour: "#2F3A45",                        // main colour (header, buttons)
+  accent: "#E8702A",                        // flame orange (highlights, booking button)
+  bookingUrl: "https://example.com/book-survey",
+  bookingLabel: "Book a free survey",
+  phone: "01234 567890",                    // placeholder
+  smallprint: "This is an estimate, not a quote. Final price depends on a survey.",
+  gasSafeNote: "Gas work (mains gas and LPG) must be carried out by a Gas Safe registered engineer.",  // hidden when the visitor picks oil
+};
+
+const PRICES = {                            // Demo prices only: the business sets its own.
+  base: {                                   // installed price in £ for a like-for-like swap, smallest size band, per tier
+    // Based on Oct 2026 research: like-for-like combi ~£2,200 locally (£1,750–£2,500); system/regular ~£3,000.
+    combi:   {good: 2000, better: 2300, best: 2800},
+    system:  {good: 2600, better: 3000, best: 3500},
+    regular: {good: 2600, better: 3000, best: 3500},
+  },
+  tiers: {                                  // tier names, warranty length (years) and one-line description
+    good:   {name: "Good",   warrantyYears: 5,  desc: "A dependable boiler with standard controls."},
+    better: {name: "Better", warrantyYears: 8,  desc: "Higher-spec boiler and a smart-ready thermostat."},
+    best:   {name: "Best",   warrantyYears: 10, desc: "Top-range boiler, smart controls and our longest cover."},
+  },
+  sizeAdjust: {                             // £ added for larger output bands (ids match RULES size bands)
+    c1: 0, c2: 150, c3: 350,                // combi: 24–30 kW / 30–35 kW / 35 kW+
+    h1: 0, h2: 100, h3: 200, h4: 350,       // system/regular: 12–18 / 18–24 / 24–30 / 30 kW+
+  },
+  conversion: {                             // £ to change type: conversion[from][to]
+    combi:   {system: 900, regular: 1300},  // adding a cylinder (and tanks)
+    system:  {combi: 650, regular: 700},    // removing / adding cylinder or tanks
+    regular: {combi: 1000, system: 550},    // removing loft tanks (and cylinder for combi)
+  },
+  newInstall: 1200,                         // £ for a first-time install (new pipework, flue, supply)
+  relocation: 700,                          // £ to move the boiler to a new location
+  loftInstall: 250,                         // £ extra when the boiler is in the loft
+  fuelAdjust: {gas: 0, lpg: 300, oil: 1800, notsure: 0},  // oil based on a national ~£4,000 oil combi figure; no LPG price data found, so 300 is a placeholder  // £ added by fuel type
+  rangeLow: 0.92, rangeHigh: 1.12,          // range shown around the estimate (×)
+  roundTo: 50,                              // round prices to the nearest £50
+};
+
+const RULES = {                             // general guidance, phrased as "usually": the engineer confirms on survey
+  combiBathrooms: ["1"],                    // combi usually suits homes where only one shower/bath runs at a time
+  combiAvoidPeople: ["5+"],                 // big households usually suit stored hot water better
+  combiAvoidBeds: ["5+"],                   // larger homes usually suit a system boiler
+  keepRegularWhenBathrooms: ["2", "3+"],    // with a cylinder + loft tanks and 2+ showers, keeping regular is often simplest
+  // VERIFY: engineer to confirm sizing on survey
+  combiSizes: [                             // combi output bands (sized for hot water flow)
+    {id: "c1", label: "about 24–30 kW", when: a => a.beds === "1-2"},
+    {id: "c2", label: "about 30–35 kW", when: a => a.beds === "3"},
+    {id: "c3", label: "about 35 kW+",   when: a => true},
+  ],
+  // VERIFY: engineer to confirm sizing on survey
+  heatOnlySizes: [                          // system / regular output bands (sized for heating)
+    {id: "h1", label: "about 12–18 kW", when: a => a.beds === "1-2"},
+    {id: "h2", label: "about 18–24 kW", when: a => a.beds === "3"},
+    {id: "h3", label: "about 24–30 kW", when: a => a.beds === "4"},
+    {id: "h4", label: "about 30 kW+",   when: a => true},
+  ],
+  why: {                                    // short reasons shown under the suggestion
+    combiFits: "A combi usually suits homes where only one shower or bath runs at a time.",
+    combiRunning: "It heats water only when you need it, so there's no tank of hot water to keep warm.",
+    convertSpace: "Going combi frees up the cylinder cupboard and loft. Removing them adds to the cost.",
+    systemFits: "A system boiler usually suits homes where two or more showers run at the same time.",
+    bigHousehold: "With a bigger household or home, stored hot water is often more comfortable.",
+    regularToSystem: "Your cylinder can usually stay. The loft tanks come out.",
+    keepRegular: "You already have a cylinder and loft tanks. Keeping a regular boiler is often the simplest change.",
+    keepSystem: "You already have a system boiler and cylinder. A like-for-like swap is often simplest.",
+    upfrontKeep: "Sticking with the same type avoids the extra cost of changing pipework.",
+    warranty: "For peace of mind, look at the Better or Best options with a longer warranty.",
+    notSure: "We've assumed a straight swap. The engineer will check what you have.",
+  },
+  altText: {                                // shown for the alternative option
+    combi: "Often the cheapest to run day to day and frees up space, but hot water can drop off if two showers run together.",
+    system: "Keeps a hot water cylinder so two showers can usually run at once, without tanks in the loft.",
+    regular: "Keeps your current setup with less change to pipework, which can keep the cost down.",
+  },
+  notes: {
+    notSureCurrent: "You weren't sure what you have now, so the price assumes a straight swap. If we need to change your system, the price can go up.",
+    notSureFuel: "You weren't sure of the fuel, so we've priced for mains gas. LPG and oil boilers usually cost more.",
+    newBuild: "With no boiler there's nothing to remove, but new pipework and a flue are needed, so we've added a new installation cost.",
+  },
+};
+
+const INCLUDED = [                          // what's included in every installed price
+  "Removal and disposal of your old boiler",
+  "A full system flush and clean",
+  "A magnetic system filter fitted",
+  "Smart-ready heating controls",
+  "Registering your boiler and its warranty for you",
+];
+
+const TYPE_NAME = {combi: "Combi", system: "System", regular: "Regular", notsure: "Current", none: "No"};  // display names
+const FUEL_NAME = {gas: "Mains gas", lpg: "LPG", oil: "Oil", notsure: "Unknown fuel"};
+/* ========================================================================== */
+
+(function init(){
+  const r = document.documentElement.style;
+  r.setProperty("--brand", BRAND.colour); r.setProperty("--flame", BRAND.accent);
+  $("firmName").textContent = BRAND.name; $("demoTag").hidden = !BRAND.demo;
+  render(false);
+})();
+</script>
+
+<script>
+/* Embedding support: when this tool sits inside another website (an iframe), tell that page how tall it is
+   so the frame can grow to fit. Harmless when opened on its own. */
+(function(){
+  var embedded = false; try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+  if (!embedded) return;
+  document.documentElement.classList.add("embedded");
+  document.documentElement.style.minHeight = "0"; document.body.style.minHeight = "0";
+  var last = 0;
+  function send(){ var b = document.body, cs = getComputedStyle(b), lc = b.lastElementChild, mb = lc ? parseFloat(getComputedStyle(lc).marginBottom) || 0 : 0;
+    var h = Math.ceil(b.getBoundingClientRect().height + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom) + mb);
+    if (Math.abs(h - last) < 2) return; last = h;
+    parent.postMessage({type: "tool-height", height: h}, "*"); }
+  window.addEventListener("load", send);
+  if (window.ResizeObserver) new ResizeObserver(send).observe(document.body); else setInterval(send, 500);
+  send();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Instant Cleaning Quote</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
+<style>
+/* Layout: a fresh, airy checklist. White cards on a pale sky wash, sky blue for choices, a lemon accent for the
+   price and main button, mint for savings. A price bar stays pinned to the bottom on its own page. Colours come from BRAND. */
+:root{
+  --brand:#0B7BC4; --brand-ink:#FFFFFF; --accent:#FFE45C; --accent-ink:#2E2600;
+  --mint:#1E9E6A; --mint-soft:#E3F6EE;
+  --bg:#F3F8FC; --card:#FFFFFF; --ink:#15283A; --muted:#58697A; --line:#DCE8F2; --soft:#E9F4FC;
+  --display:"Plus Jakarta Sans",system-ui,sans-serif; --body:"DM Sans",system-ui,sans-serif;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);margin:0;-webkit-text-size-adjust:100%}
+.wrap{max-width:680px;margin:0 auto;padding-inline:16px;padding-block:16px 140px}
+button{font-family:inherit;color:inherit}
+
+/* Header */
+header.top{background:var(--brand);color:var(--brand-ink);border-radius:20px;padding:20px 18px 22px;display:grid;gap:8px;position:relative;overflow:hidden;isolation:isolate}
+header.top::before,header.top::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.12);z-index:-1}
+header.top::before{width:150px;height:150px;right:-40px;top:-60px}
+header.top::after{width:70px;height:70px;right:70px;bottom:-34px;background:rgba(255,255,255,.09)}
+.spark{position:absolute;right:22px;top:20px;width:34px;height:34px;color:var(--accent);z-index:-1}
+.spark.s2{right:62px;top:54px;width:16px;height:16px;opacity:.85}
+.firm{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font:600 .85rem var(--body);opacity:.95}
+.demo{font:700 .62rem var(--body);letter-spacing:.1em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:3px 8px;border-radius:999px}
+header.top h1{font:800 1.75rem/1.08 var(--display);margin:0;letter-spacing:-.02em;max-width:15ch;text-wrap:balance}
+header.top p{margin:0;font-size:.95rem;opacity:.92;max-width:42ch}
+
+/* Sections */
+.sec{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px}
+.sec h2{font:700 1.08rem var(--display);margin:0 0 12px;display:flex;align-items:center;gap:10px;letter-spacing:-.01em}
+.sec h2 .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--soft);color:var(--brand);font:800 .8rem var(--display);display:grid;place-items:center}
+.lab{display:block;font-weight:600;font-size:.92rem;margin:14px 0 8px}
+.hint{font-size:.82rem;color:var(--muted);margin:8px 0 0}
+
+/* Type of clean cards */
+.types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.types button{position:relative;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:12px 12px 12px;min-height:84px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
+.types b{font:700 .95rem/1.2 var(--display);padding-right:22px}
+.types small{font-size:.78rem;color:var(--muted);line-height:1.35}
+.types .rate{margin-top:auto;font-weight:600;color:var(--brand);font-size:.78rem}
+.types button::after{content:"";position:absolute;right:10px;top:10px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);background:#fff}
+.types button[aria-pressed="true"]{border-color:var(--brand);background:var(--soft)}
+.types button[aria-pressed="true"]::after{border-color:var(--brand);background:var(--brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.2l2.6 2.6L12 5.4' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat}
+
+/* Chips / segmented */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{font:600 .9rem var(--body);border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:10px 16px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chips button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.chips .tag{font-size:.72rem;font-weight:600;background:var(--mint-soft);color:var(--mint);padding:2px 7px;border-radius:999px}
+.chips button[aria-pressed="true"] .tag{background:rgba(255,255,255,.22);color:#fff}
+
+/* Counters */
+.counts{display:grid;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.count{display:flex;align-items:center;gap:12px;padding:8px 8px 8px 14px;border-top:1px solid var(--line)}
+.count:first-child{border-top:0}
+.count .t{flex:1;min-width:0;font-weight:600;font-size:.93rem;line-height:1.3}
+.count .t small{display:block;font-weight:400;color:var(--muted);font-size:.78rem}
+.step{flex:none;display:inline-flex;align-items:center;gap:2px;background:var(--soft);border-radius:12px;padding:2px}
+.step button{border:0;background:#fff;width:44px;height:44px;border-radius:10px;font:600 1.25rem/1 var(--body);cursor:pointer;color:var(--brand);box-shadow:0 1px 0 var(--line)}
+.step button:disabled{opacity:.35;cursor:default;box-shadow:none}
+.step output{min-width:30px;text-align:center;font:700 1.05rem var(--display);font-variant-numeric:tabular-nums}
+
+/* Extras */
+.extras{display:grid;gap:8px}
+.extra{border:1.5px solid var(--line);border-radius:14px;background:#fff;overflow:hidden}
+.extra.on{border-color:var(--brand);background:var(--soft)}
+.extra > button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:none;padding:10px 14px;min-height:52px;cursor:pointer;font-size:.93rem}
+.box{flex:none;width:22px;height:22px;border-radius:7px;border:1.5px solid #B9CDDD;background:#fff;display:grid;place-items:center}
+.extra.on .box{background:var(--brand);border-color:var(--brand)}
+.extra.on .box::after{content:"";width:12px;height:12px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.4l3 3L13 4.6' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.extra .nm{flex:1;min-width:0;font-weight:600;line-height:1.3}
+.extra .nm small{display:block;font-weight:400;color:var(--muted);font-size:.78rem}
+.extra .pr{flex:none;font-weight:600;color:var(--brand);font-variant-numeric:tabular-nums;font-size:.88rem;text-align:right}
+.extra .sub{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:0 14px 12px 48px;font-size:.88rem}
+.extra .sub .chips button{padding:8px 14px;font-size:.85rem}
+.extra .sub .chips button:not([aria-pressed="true"]){background:#fff}
+
+/* Result */
+.result{background:var(--card);border:2px solid var(--brand);border-radius:20px;padding:18px 16px;margin-top:18px;display:grid;gap:12px;position:relative;overflow:hidden}
+.result::before{content:"";position:absolute;inset:0 0 auto 0;height:6px;background:linear-gradient(90deg,var(--brand),var(--accent))}
+.result h2{font:700 1.08rem var(--display);margin:4px 0 0}
+.range{font:800 2.2rem/1.05 var(--display);letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+.range small{font:600 .95rem var(--body);color:var(--muted);letter-spacing:0;margin-left:4px;white-space:nowrap}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.fact{background:var(--soft);border-radius:12px;padding:8px 12px;font-size:.84rem;line-height:1.3;color:var(--ink)}
+.fact b{display:block;font:700 1rem var(--display);font-variant-numeric:tabular-nums}
+.fact.mint{background:var(--mint-soft)}
+.how{font:600 .9rem var(--display);margin:4px 0 0}
+.break{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 0;font-size:.88rem;font-variant-numeric:tabular-nums;margin:0;border-top:1px dashed var(--line);padding-top:10px}
+.break dt{color:var(--muted);min-width:0;overflow-wrap:anywhere} .break dd{margin:0;text-align:right;font-weight:600;padding-left:12px}
+.break .tot{color:var(--ink);font-weight:700;border-top:1px solid var(--line);padding-top:6px}
+.break dd.tot{font-weight:800}
+.cta{display:block;text-align:center;text-decoration:none;background:var(--accent);color:var(--accent-ink);font:800 1.08rem var(--display);padding:15px;border-radius:14px;min-height:52px;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.cta:hover{filter:brightness(.97)}
+.ghost{display:block;width:100%;text-align:center;background:#fff;color:var(--brand);border:1.5px solid var(--brand);font:600 .95rem var(--body);padding:12px;min-height:46px;border-radius:14px;cursor:pointer}
+.ghost.done{background:var(--mint-soft);border-color:var(--mint);color:var(--mint)}
+textarea.copy{width:100%;min-height:140px;font:.8rem/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:8px;resize:vertical}
+.small{font-size:.76rem;color:var(--muted);line-height:1.5;margin:0}
+.ph{background:#FFF8D6;border:1px dashed #E5CF6A;border-radius:6px;padding:1px 6px;color:#5E4E00}
+.phone a{color:var(--brand);font-weight:600}
+
+/* Sticky bar */
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 24px rgba(16,60,100,.12);z-index:5}
+.bar .in{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.bar .lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.bar .val{font:800 1.2rem/1.15 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar .val small{font:500 .78rem var(--body);color:var(--muted)}
+.bar a{margin-left:auto;background:var(--accent);color:var(--accent-ink);text-decoration:none;font:800 .95rem var(--display);padding:12px 16px;border-radius:12px;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
+
+button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.cta:focus-visible,.bar a:focus-visible{outline-color:var(--ink)}
+[hidden]{display:none !important}
+.embedded .bar{display:none}
+.embedded .wrap{padding-bottom:24px}
+
+@media (min-width:560px){
+  .wrap{padding-top:28px}
+  header.top{padding:26px 26px 28px}
+  header.top h1{font-size:2.1rem}
+  .sec{padding:20px}
+  .types button{min-height:96px;padding:14px}
+  .result{padding:22px}
+}
+@media (max-width:359px){
+  .wrap{padding-inline:12px}
+  .types small{display:none}
+  .types button{min-height:72px}
+  .count{padding-left:10px;gap:8px}
+  .step button{width:44px}
+  .range{font-size:1.9rem}
+  .bar .val{font-size:1.05rem}
+  .bar a{padding:12px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .chips button,.types button,.extra,.step button,.ghost{transition:background-color .15s,border-color .15s,color .15s}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <svg class="spark" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 0c.6 6.4 5.6 11.4 12 12-6.4.6-11.4 5.6-12 12-.6-6.4-5.6-11.4-12-12C6.4 11.4 11.4 6.4 12 0z"/></svg>
+    <svg class="spark s2" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 0c.6 6.4 5.6 11.4 12 12-6.4.6-11.4 5.6-12 12-.6-6.4-5.6-11.4-12-12C6.4 11.4 11.4 6.4 12 0z"/></svg>
+    <div class="firm"><span id="firmName">Example Cleaning Co.</span><span class="demo" id="demoTag">Demo</span></div>
+    <h1>Instant cleaning quote</h1>
+    <p>Tell us about your home and the clean you need. Your price updates as you go. No sign-up.</p>
+  </header>
+
+  <section class="sec" aria-labelledby="h1">
+    <h2 id="h1"><span class="n">1</span>Type of clean</h2>
+    <div class="types" id="types" role="group" aria-labelledby="h1"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="h2">
+    <h2 id="h2"><span class="n">2</span>Your home</h2>
+    <span class="lab" id="propLab" style="margin-top:0">Property type</span>
+    <div class="chips" id="prop" role="group" aria-labelledby="propLab"></div>
+    <span class="lab">Rooms</span>
+    <div class="counts" id="counts"></div>
+    <span class="lab" id="condLab">Roughly how much cleaning does it need?</span>
+    <div class="chips" id="cond" role="group" aria-labelledby="condLab"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="h3" id="freqSec">
+    <h2 id="h3"><span class="n">3</span>How often?</h2>
+    <div class="chips" id="freq" role="group" aria-labelledby="h3"></div>
+    <p class="hint">More frequent visits mean less build-up, so each visit costs less.</p>
+  </section>
+
+  <section class="sec" aria-labelledby="h4">
+    <h2 id="h4"><span class="n" id="n4">4</span>Any extras?</h2>
+    <div class="extras" id="extras"></div>
+    <p class="hint" id="extrasHint"></p>
+  </section>
+
+  <section class="sec" aria-labelledby="h5">
+    <h2 id="h5"><span class="n" id="n5">5</span>Cleaning supplies</h2>
+    <div class="chips" id="sup" role="group" aria-labelledby="h5"></div>
+  </section>
+
+  <section class="result" aria-live="polite" aria-atomic="false">
+    <h2>Your estimate</h2>
+    <div class="range" id="range"></div>
+    <div class="facts" id="facts"></div>
+    <p class="how">How we worked this out</p>
+    <dl class="break" id="break"></dl>
+    <a class="cta" id="cta" href="#" target="_blank" rel="noopener">Book a clean</a>
+    <button class="ghost" id="copyBtn" type="button">Copy my details</button>
+    <textarea class="copy" id="copyBox" readonly hidden aria-label="Your details to copy"></textarea>
+    <p class="small" id="notes"></p>
+    <p class="small phone" id="phone"></p>
+  </section>
+</div>
+
+<div class="bar" aria-hidden="true"><div class="in">
+  <div><div class="lbl" id="barLbl">Estimate</div><div class="val" id="barVal"></div></div>
+  <a id="barCta" href="#" target="_blank" rel="noopener" tabindex="-1">Book a clean</a>
+</div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let SUMMARY = "";
+const state = {type:"regular", prop:"house", bed:2, bath:1, living:1, cond:"average", freq:"fortnightly",
+  extras:{}, oven:"single", carpetRooms:1, beds:1, sup:"ours"};
+
+const money = v => "£" + Math.round(v).toLocaleString("en-GB");
+const round5 = v => Math.max(5, Math.round(v / 5) * 5);
+const hrs = h => (Number.isInteger(h) ? h : h.toFixed(1)) + " hour" + (h === 1 ? "" : "s");
+const plural = (n, w, p) => n + " " + (n === 1 ? w : (p || w + "s"));
+
+function init(){
+  const r = document.documentElement.style;
+  r.setProperty("--brand", BRAND.colour); r.setProperty("--accent", BRAND.accent);
+  $("firmName").textContent = BRAND.name; $("demoTag").hidden = !BRAND.demo;
+  $("cta").href = $("barCta").href = BRAND.bookingUrl;
+  $("cta").textContent = $("barCta").textContent = BRAND.bookingLabel;
+  $("phone").innerHTML = BRAND.phone ? `Prefer to talk? Call <a href="tel:${BRAND.phone.replace(/\s/g, "")}">${BRAND.phone}</a>` : "";
+  Object.keys(PRICES.extras).forEach(k => state.extras[k] = false);
+
+  // Type cards
+  $("types").innerHTML = Object.entries(PRICES.types).map(([k, t]) =>
+    `<button type="button" data-v="${k}"><b>${t.label}</b><small>${t.blurb}</small><span class="rate">${money(t.rate)}/hour</span></button>`).join("");
+  $("prop").innerHTML = Object.entries(PRICES.property).map(([k, p]) => `<button type="button" data-v="${k}">${p.label}</button>`).join("");
+  $("cond").innerHTML = Object.entries(PRICES.condition).map(([k, c]) => `<button type="button" data-v="${k}">${c.label}</button>`).join("");
+  $("sup").innerHTML = `<button type="button" data-v="ours">Yes, you bring them</button><button type="button" data-v="mine">I'll provide them${PRICES.suppliesDiscount > 0 ? ` <span class="tag">save ${money(PRICES.suppliesDiscount)}</span>` : ""}</button>`;
+
+  $("counts").innerHTML = Object.entries(PRICES.rooms).map(([k, rm]) =>
+    `<div class="count"><span class="t" id="lab-${k}">${rm.label}<small>${rm.hint}</small></span>
+      <span class="step" role="group" aria-labelledby="lab-${k}"><button type="button" data-k="${k}" data-d="-1" aria-label="Fewer ${rm.label.toLowerCase()}">−</button><output id="out-${k}" aria-live="polite"></output><button type="button" data-k="${k}" data-d="1" aria-label="More ${rm.label.toLowerCase()}">+</button></span></div>`).join("");
+
+  // Events
+  const pick = (id, key) => $(id).addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b){ state[key] = b.dataset.v; render(); } });
+  pick("types", "type"); pick("prop", "prop"); pick("cond", "cond"); pick("freq", "freq"); pick("sup", "sup");
+  $("counts").addEventListener("click", e => {
+    const b = e.target.closest("button[data-k]"); if (!b) return;
+    const rm = PRICES.rooms[b.dataset.k];
+    state[b.dataset.k] = Math.max(rm.min, Math.min(rm.max, state[b.dataset.k] + +b.dataset.d)); render();
+  });
+  $("extras").addEventListener("click", e => {
+    const t = e.target.closest("[data-x]");
+    if (t){ state.extras[t.dataset.x] = !state.extras[t.dataset.x]; render(); const again = $("extras").querySelector(`[data-x="${t.dataset.x}"]`); if (again) again.focus(); return; }
+    const o = e.target.closest("[data-oven]");
+    if (o){ state.oven = o.dataset.oven; render(); $("extras").querySelector(`[data-oven="${o.dataset.oven}"]`).focus(); return; }
+    const s = e.target.closest("[data-sk]");
+    if (s){ const k = s.dataset.sk; state[k] = Math.max(1, Math.min(PRICES.extraLimits[k], state[k] + +s.dataset.d)); render();
+      const again = $("extras").querySelector(`[data-sk="${k}"][data-d="${s.dataset.d}"]`); if (again && !again.disabled) again.focus(); }
+  });
+  $("copyBtn").addEventListener("click", copyDetails);
+  render();
+}
+
+// Work out hours and prices from the settings.
+function calc(){
+  const P = PRICES, t = P.types[state.type], isReg = state.type === "regular";
+  const cond = P.condition[state.cond].mult[state.type];
+  const freq = isReg ? P.frequency[state.freq] : null;
+  let raw = t.baseHours + state.bed * t.perBedroom + state.bath * t.perBathroom + state.living * t.perLiving + (state.prop === "house" ? t.houseExtra : 0);
+  raw *= cond;
+  if (freq) raw *= freq.hoursFactor;
+  let hours = Math.ceil(raw / P.hoursStep) * P.hoursStep;
+  const minHit = hours < t.minHours;
+  hours = Math.max(t.minHours, hours);
+  let clean = hours * t.rate;
+  let minCharge = 0;
+  if (clean < t.minCharge){ minCharge = t.minCharge - clean; clean = t.minCharge; }
+
+  // Cleaners: split long jobs across a team.
+  let cleaners = 1;
+  if (!isReg || P.splitRegularVisits) cleaners = Math.min(P.maxCleaners, Math.max(1, Math.ceil(hours / P.maxHoursPerCleaner - 1e-9)));
+  const onSite = Math.ceil(hours / cleaners / P.hoursStep) * P.hoursStep;
+
+  // Extras
+  const lines = [], everyVisit = [], once = [];
+  Object.entries(P.extras).forEach(([k, x]) => {
+    if (!state.extras[k]) return;
+    let price = x.price, label = x.label;
+    if (k === "oven"){ price = x.options[state.oven].price; label = `${x.label} (${x.options[state.oven].label.toLowerCase()})`; }
+    if (x.per === "room"){ price = x.price * state.carpetRooms; label = `${x.label} × ${plural(state.carpetRooms, "room")}`; }
+    if (x.per === "bed"){ price = x.price * state.beds; label = `${x.label} × ${plural(state.beds, "bed")}`; }
+    (isReg && x.everyVisit ? everyVisit : once).push([label, price]);
+  });
+  const sumOf = a => a.reduce((s, [, v]) => s + v, 0);
+  const supDisc = state.sup === "mine" ? Math.min(P.suppliesDiscount, clean * 0.5) : 0;
+
+  const perVisit = clean + sumOf(everyVisit) - supDisc;          // regular: each visit
+  const total = isReg ? perVisit : clean + sumOf(once) - supDisc;  // one-off: whole job
+  const onceTotal = isReg ? sumOf(once) : 0;
+  const monthly = isReg ? perVisit * freq.visitsPerYear / 12 : 0;
+  return {t, isReg, freq, hours, minHit, minCharge, clean, cleaners, onSite, everyVisit, once, supDisc, total, onceTotal, monthly};
+}
+
+function render(){
+  const P = PRICES, c = calc();
+  const press = (id, v) => $(id).querySelectorAll("button[data-v]").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v));
+  press("types", state.type); press("prop", state.prop); press("cond", state.cond); press("freq", state.freq); press("sup", state.sup);
+
+  Object.entries(P.rooms).forEach(([k, rm]) => {
+    $("out-" + k).textContent = state[k];
+    const [dn, up] = $("counts").querySelectorAll(`[data-k="${k}"]`);
+    dn.disabled = state[k] <= rm.min; up.disabled = state[k] >= rm.max;
+  });
+
+  // Frequency section only for regular cleans
+  $("freqSec").hidden = !c.isReg;
+  $("n4").textContent = c.isReg ? 4 : 3; $("n5").textContent = c.isReg ? 5 : 4;
+  if (c.isReg){
+    const baseF = Math.min(...Object.values(P.frequency).map(f => f.hoursFactor));
+    $("freq").innerHTML = Object.entries(P.frequency).map(([k, f]) => {
+      const diff = Math.round((f.hoursFactor / baseF - 1) * 100);
+      return `<button type="button" data-v="${k}" aria-pressed="${k === state.freq}">${f.label}${diff > 0 ? ` <small style="font-weight:500;opacity:.8">+${diff}% time</small>` : ` <span class="tag">best value</span>`}</button>`;
+    }).join("");
+  }
+
+  // Extras list
+  $("extras").innerHTML = Object.entries(P.extras).map(([k, x]) => {
+    const on = state.extras[k];
+    let pr = x.per === "room" ? `${money(x.price)}/room` : x.per === "bed" ? `${money(x.price)}/bed` : k === "oven" ? `from ${money(Math.min(...Object.values(x.options).map(o => o.price)))}` : money(x.price);
+    let sub = "";
+    if (on && k === "oven") sub = `<div class="sub"><div class="chips" role="group" aria-label="Oven size">${Object.entries(x.options).map(([ok, o]) =>
+      `<button type="button" data-oven="${ok}" aria-pressed="${state.oven === ok}">${o.label} · ${money(o.price)}</button>`).join("")}</div></div>`;
+    const stepper = (sk, word) => `<div class="sub"><span id="sl-${sk}">How many ${word}?</span><span class="step" role="group" aria-labelledby="sl-${sk}"><button type="button" data-sk="${sk}" data-d="-1" aria-label="Fewer" ${state[sk] <= 1 ? "disabled" : ""}>−</button><output>${state[sk]}</output><button type="button" data-sk="${sk}" data-d="1" aria-label="More" ${state[sk] >= P.extraLimits[sk] ? "disabled" : ""}>+</button></span></div>`;
+    if (on && x.per === "room") sub = stepper("carpetRooms", "rooms");
+    if (on && x.per === "bed") sub = stepper("beds", "beds");
+    const note = c.isReg ? (x.everyVisit ? "Added to every visit" : "One-off, on a visit you choose") : (x.note || "");
+    return `<div class="extra${on ? " on" : ""}"><button type="button" data-x="${k}" aria-pressed="${on}"><span class="box" aria-hidden="true"></span><span class="nm">${x.label}${note ? `<small>${note}</small>` : ""}</span><span class="pr">${pr}</span></button>${sub}</div>`;
+  }).join("");
+  $("extrasHint").textContent = c.isReg ? "Extras that aren't every visit are added once, on whichever visit suits you." : "Each extra is a fixed price on top of the clean.";
+
+  // Headline
+  const lo = round5(c.total * P.rangeLow), hi = round5(c.total * P.rangeHigh);
+  const unit = c.isReg ? "per visit" : "total";
+  const rangeTxt = `${money(lo)} – ${money(hi)}`;
+  $("range").innerHTML = `${rangeTxt} <small>${unit}</small>`;
+  $("barVal").innerHTML = `${rangeTxt} <small>${c.isReg ? "/visit" : ""}</small>`;
+  $("barLbl").textContent = c.t.label;
+
+  const facts = [];
+  facts.push(`<div class="fact"><b>${hrs(c.hours)}</b>of cleaning</div>`);
+  if (c.cleaners > 1) facts.push(`<div class="fact"><b>${c.cleaners} cleaners</b>about ${hrs(c.onSite)} on site</div>`);
+  else facts.push(`<div class="fact"><b>1 cleaner</b>${c.isReg ? "same cleaner where we can" : "for the whole job"}</div>`);
+  let monthlyTxt = "";
+  if (c.isReg){
+    const mlo = round5(c.monthly * P.rangeLow), mhi = round5(c.monthly * P.rangeHigh);
+    monthlyTxt = `${money(mlo)} – ${money(mhi)}`;
+    facts.push(`<div class="fact mint"><b>${monthlyTxt}</b>a month, roughly (${c.freq.label.toLowerCase()})</div>`);
+  }
+  $("facts").innerHTML = facts.join("");
+
+  // Breakdown
+  const rows = [];
+  const parts = [plural(state.bed, "bedroom"), plural(state.bath, "bathroom"), plural(state.living, "extra living room"), "kitchen", P.property[state.prop].label.toLowerCase()];
+  rows.push([`${c.t.label}: ${parts.join(", ")}`, null]);
+  rows.push([`${hrs(c.hours)} × ${money(c.t.rate)}/hour${c.minHit ? ` (${hrs(c.t.minHours)} minimum)` : ""}`, c.clean - c.minCharge]);
+  if (c.minCharge > 0) rows.push(["Minimum charge top-up", c.minCharge]);
+  const condLabel = P.condition[state.cond], cm = condLabel.mult[state.type];
+  if (cm !== 1) rows.push([`Time adjusted for “${condLabel.label.toLowerCase()}” (×${cm})`, null]);
+  if (c.isReg && c.freq.hoursFactor !== 1) rows.push([`Time adjusted for ${c.freq.label.toLowerCase()} visits (×${c.freq.hoursFactor})`, null]);
+  c.everyVisit.forEach(l => rows.push(l));
+  if (!c.isReg) c.once.forEach(l => rows.push(l));
+  if (c.supDisc > 0) rows.push(["You provide supplies", -c.supDisc]);
+  rows.push([c.isReg ? "Per visit" : "Total", c.total, true]);
+  if (c.isReg && c.once.length){
+    c.once.forEach(([l, v]) => rows.push([`One-off: ${l}`, v]));
+    rows.push(["One-off extras (added once)", c.onceTotal, true]);
+  }
+  $("break").innerHTML = rows.map(([k, v, tot]) => `<dt${tot ? ' class="tot"' : ""}>${k}</dt><dd${tot ? ' class="tot"' : ""}>${v === null ? "" : (v < 0 ? "−" + money(-v) : money(v))}</dd>`).join("");
+
+  // Notes
+  $("notes").innerHTML = `This is an estimate. We'll confirm the price after a quick chat or visit${c.isReg ? ", and it may change after the first clean" : ""}. ${c.t.note ? c.t.note + " " : ""}${BRAND.smallprint} ${c.isReg && c.once.length ? `One-off extras (${money(c.onceTotal)}) are not included in the per visit or monthly figures. ` : ""}${BRAND.demo ? '<span class="ph">Demo prices: each business sets its own.</span>' : ""}`;
+
+  // Summary for copying
+  const ex = [...c.everyVisit, ...c.once].map(([l, v]) => `  - ${l}: ${money(v)}`);
+  SUMMARY = `Cleaning enquiry for ${BRAND.name}\n` +
+    `Type of clean: ${c.t.label}\n` +
+    (c.isReg ? `How often: ${c.freq.label}\n` : "") +
+    `Home: ${P.property[state.prop].label}, ${parts.slice(0, 3).join(", ")}\n` +
+    `Condition: ${P.condition[state.cond].label}\n` +
+    `Extras: ${ex.length ? "\n" + ex.join("\n") : "none"}\n` +
+    `Supplies: ${state.sup === "mine" ? "I'll provide them" : "Please bring them"}\n` +
+    `Estimated time: ${hrs(c.hours)}${c.cleaners > 1 ? ` (${c.cleaners} cleaners, about ${hrs(c.onSite)} on site)` : ""}\n` +
+    `Estimate: ${rangeTxt} ${unit}` +
+    (c.isReg ? `\nRoughly ${monthlyTxt} a month` + (c.once.length ? `\nOne-off extras: ${money(c.onceTotal)}` : "") : "");
+}
+
+async function copyDetails(){
+  const b = $("copyBtn");
+  let ok = false;
+  try { await navigator.clipboard.writeText(SUMMARY); ok = true; } catch (e) {
+    try { const t = $("copyBox"); t.value = SUMMARY; t.hidden = false; t.select(); ok = document.execCommand("copy"); if (ok) t.hidden = true; } catch (e2) { ok = false; }
+  }
+  if (ok){ b.textContent = "Copied. Paste it into your booking message"; b.classList.add("done"); $("copyBox").hidden = true; }
+  else { const t = $("copyBox"); t.value = SUMMARY; t.hidden = false; t.select(); b.textContent = "Select and copy the text below"; }
+  clearTimeout(copyDetails.t);
+  copyDetails.t = setTimeout(() => { b.textContent = "Copy my details"; b.classList.remove("done"); }, 3000);
+}
+
+/* ============ BRAND & PRICE SETTINGS: each business edits these ============ */
+const BRAND = {
+  name: "Example Cleaning Co.",            // invented demo business
+  demo: true,                              // shows the "Demo" badge and demo-price note
+  colour: "#0B7BC4",                       // main colour (sky blue): needs white text to be readable on it
+  accent: "#FFE45C",                       // accent (lemon): main button and highlights, dark text on it
+  bookingUrl: "https://example.com/book-a-clean", // where "Book a clean" goes
+  bookingLabel: "Book a clean",            // button text
+  phone: "01234 567890",                   // placeholder number, shown under the result
+  smallprint: "Prices include travel within our usual area. Parking charges may be added.", // extra small print under every result
+};
+
+const PRICES = {                           // Demo prices only: the business sets its own.
+  types: {                                 // one entry per type of clean
+    regular: {
+      label: "Regular clean", blurb: "Weekly, fortnightly or every 4 weeks",
+      rate: 20,          // £ per cleaner hour
+      baseHours: 1,      // hours for kitchen, hallway and general tidy
+      perBedroom: 0.4,   // hours per bedroom
+      perBathroom: 0.5,  // hours per bathroom
+      perLiving: 0.4,    // hours per extra living space / reception room
+      houseExtra: 0.3,   // extra hours for a house (stairs, landing)
+      minHours: 2,       // minimum hours per visit
+      minCharge: 40,     // £ minimum charge per visit
+      note: "",          // extra small print for this type
+    },
+    deep: {
+      label: "One-off deep clean", blurb: "Top-to-bottom reset, inside and out",
+      rate: 25, baseHours: 2, perBedroom: 0.9, perBathroom: 1.2, perLiving: 0.8, houseExtra: 0.6,
+      minHours: 3, minCharge: 90,
+      note: "",
+    },
+    tenancy: {
+      label: "End of tenancy", blurb: "Moving out or in, ready for inspection",
+      rate: 26, baseHours: 2.5, perBedroom: 1.1, perBathroom: 1.4, perLiving: 1, houseExtra: 0.8,
+      minHours: 4, minCharge: 120,
+      note: "End of tenancy price assumes the property is empty.",
+    },
+    builders: {
+      label: "After building work", blurb: "Dust and residue after works",
+      rate: 28, baseHours: 3, perBedroom: 1.2, perBathroom: 1.5, perLiving: 1.2, houseExtra: 1,
+      minHours: 4, minCharge: 140,
+      note: "Assumes the building work is finished. Removing rubble or waste isn't included.",
+    },
+  },
+  rooms: {                                 // counters shown under "Your home" (min / max allowed)
+    bed:    {label: "Bedrooms", hint: "Including box rooms", min: 1, max: 6},
+    bath:   {label: "Bathrooms", hint: "Including en-suites and WCs", min: 1, max: 4},
+    living: {label: "Extra living spaces", hint: "Lounge, dining room, study", min: 0, max: 3},
+  },
+  property: {                              // property type (hours difference is houseExtra above)
+    flat:  {label: "Flat"},
+    house: {label: "House"},
+  },
+  condition: {                             // time multipliers by condition, per type of clean
+    good:    {label: "Well kept",               mult: {regular: 0.9, deep: 0.9,  tenancy: 0.9,  builders: 0.9}},
+    average: {label: "Average",                 mult: {regular: 1,   deep: 1,    tenancy: 1,    builders: 1}},
+    heavy:   {label: "Needs a lot of work",     mult: {regular: 1.3, deep: 1.35, tenancy: 1.35, builders: 1.4}},
+  },
+  frequency: {                             // regular cleans only
+    weekly:      {label: "Weekly",        hoursFactor: 1,    visitsPerYear: 52}, // time multiplier per visit; visits a year
+    fortnightly: {label: "Fortnightly",   hoursFactor: 1.1,  visitsPerYear: 26},
+    four:        {label: "Every 4 weeks", hoursFactor: 1.25, visitsPerYear: 13},
+  },
+  extras: {                                // fixed £ prices added on top
+    oven:     {label: "Oven clean", options: {single: {label: "Single", price: 50}, double: {label: "Double", price: 65}}}, // £ per oven by size
+    fridge:   {label: "Fridge/freezer inside", price: 25},          // £ fixed
+    windows:  {label: "Inside windows", price: 25},                 // £ fixed, whole home
+    cupboards:{label: "Inside kitchen cupboards", price: 30, note: "Best when they're empty"}, // £ fixed
+    carpet:   {label: "Carpet clean", price: 40, per: "room"},      // £ per room
+    balcony:  {label: "Balcony or patio sweep", price: 15},         // £ fixed
+    linen:    {label: "Change bed linen", price: 5, per: "bed", everyVisit: true, note: "Using your clean linen"}, // £ per bed; repeats each regular visit
+  },
+  extraLimits: {carpetRooms: 6, beds: 6},  // most rooms for carpet cleaning / beds for linen
+  suppliesDiscount: 3,                     // £ off per visit (or per job) if the customer provides supplies; 0 hides the saving
+  hoursStep: 0.5,                          // round hours up to the nearest half hour
+  maxHoursPerCleaner: 5,                   // longer one-off jobs are split across more cleaners
+  maxCleaners: 4,                          // most cleaners sent to one job
+  splitRegularVisits: false,               // true = also split long regular visits
+  rangeLow: 0.9, rangeHigh: 1.15,          // show a price range, not a fixed price
+};
+/* ========================================================================== */
+init();
+</script>
+
+<script>
+/* Embedding support: when this tool sits inside another website (an iframe), tell that page how tall it is
+   so the frame can grow to fit. Harmless when opened on its own. */
+(function(){
+  var embedded = false; try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+  if (!embedded) return;
+  document.documentElement.classList.add("embedded");
+  document.documentElement.style.minHeight = "0"; document.body.style.minHeight = "0";
+  var last = 0;
+  function send(){ var b = document.body, cs = getComputedStyle(b), lc = b.lastElementChild, mb = lc ? parseFloat(getComputedStyle(lc).marginBottom) || 0 : 0;
+    var h = Math.ceil(b.getBoundingClientRect().height + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom) + mb);
+    if (Math.abs(h - last) < 2) return; last = h;
+    parent.postMessage({type: "tool-height", height: h}, "*"); }
+  window.addEventListener("load", send);
+  if (window.ResizeObserver) new ResizeObserver(send).observe(document.body); else setInterval(send, 500);
+  send();
+})();
+</script>
+</body>
+</html>

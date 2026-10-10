@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grooming Price Checker</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a groomer's front desk. Three short steps about the dog, then the price hangs on a coral "name tag".
+   Paw prints grow with the dog size. A price bar stays pinned to the bottom (hidden when embedded). Colours come from BRAND. */
+:root{
+  --brand:#0E7C78; --brand-ink:#FFFFFF; --accent:#FF8466; --accent-ink:#3B140A;
+  --bg:#E8F6F0; --mint:#CFEDE2; --card:#FFFFFF; --ink:#173634; --muted:#4F6B67; --line:#CDE3DB;
+  --display:"Fredoka",system-ui,sans-serif; --body:"Figtree",system-ui,sans-serif;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);margin:0}
+.wrap{max-width:680px;margin:0 auto;padding-inline:16px;padding-block:16px 140px}
+
+/* Header */
+header.top{background:var(--brand);color:var(--brand-ink);border-radius:26px;padding:20px 20px 22px;position:relative;overflow:hidden}
+header.top .bigpaw{position:absolute;right:-22px;bottom:-30px;width:130px;height:130px;color:var(--accent);opacity:.95;transform:rotate(-18deg)}
+header.top .bigpaw2{position:absolute;right:112px;top:-14px;width:52px;height:52px;color:#fff;opacity:.14;transform:rotate(14deg)}
+.firm{display:flex;align-items:center;gap:8px;font:600 .9rem var(--body);position:relative;z-index:1;flex-wrap:wrap}
+.firm svg{width:22px;height:22px;color:var(--accent)}
+.demo{font:700 .72rem var(--body);background:rgba(255,255,255,.2);padding:3px 9px;border-radius:999px}
+header.top h1{font:600 1.85rem/1.08 var(--display);margin:12px 0 8px;position:relative;z-index:1;max-width:13ch;text-wrap:balance}
+header.top p{margin:0;font-size:.95rem;position:relative;z-index:1;max-width:min(30ch,calc(100% - 96px));opacity:.95}
+
+/* Sections */
+section.step{margin-top:26px}
+section.step > h2{font:600 1.3rem/1.2 var(--display);margin:0 0 4px;display:flex;align-items:center;gap:10px}
+section.step > h2 .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-size:1rem}
+.q{margin-top:16px}
+.q > .lab{font-weight:700;font-size:.95rem;display:block;margin-bottom:8px}
+.hint{font-size:.85rem;color:var(--muted);margin:6px 0 0}
+
+select{width:100%;min-height:48px;font:500 1rem var(--body);color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px 40px 10px 14px;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23173634' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+
+/* Size picker: paw grows with size */
+.sizes{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
+.sizes button{min-height:96px;display:grid;justify-items:center;align-content:end;gap:2px;padding:10px 6px;border:1.5px solid var(--line);background:#fff;border-radius:18px;cursor:pointer;color:var(--ink);font:600 1rem var(--display)}
+.sizes button svg{color:var(--brand);margin-bottom:4px}
+.sizes button small{font:400 .76rem/1.25 var(--body);color:var(--muted);text-align:center}
+.sizes button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.sizes button[aria-pressed="true"] svg{color:var(--accent)}
+.sizes button[aria-pressed="true"] small{color:var(--brand-ink);opacity:.9}
+
+/* Option cards (coat, service) */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:8px}
+.cards button{min-height:56px;text-align:left;display:grid;gap:2px;padding:11px 14px 11px 44px;border:1.5px solid var(--line);background:#fff;border-radius:16px;cursor:pointer;color:var(--ink);font:700 .98rem var(--body);position:relative}
+.cards button::before{content:"";position:absolute;left:14px;top:13px;width:20px;height:20px;border-radius:50%;border:2px solid var(--line);background:#fff}
+.cards button small{font-weight:400;font-size:.84rem;color:var(--muted);line-height:1.35}
+.cards button[aria-pressed="true"]{border-color:var(--brand);background:#F3FBF8;box-shadow:inset 0 0 0 1px var(--brand)}
+.cards button[aria-pressed="true"]::before{border-color:var(--brand);background:var(--brand);box-shadow:inset 0 0 0 4px #fff}
+
+/* Pills (condition, temperament) */
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pills button{min-height:44px;padding:9px 16px;border:1.5px solid var(--line);background:#fff;border-radius:999px;cursor:pointer;color:var(--ink);font:600 .95rem var(--body)}
+.pills button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+
+/* Add-ons */
+.addons{display:grid;gap:8px}
+.addon{display:flex;align-items:center;gap:12px;min-height:52px;padding:10px 14px;background:#fff;border:1.5px solid var(--line);border-radius:16px;cursor:pointer}
+.addon input{flex:none;width:22px;height:22px;margin:0;accent-color:var(--brand)}
+.addon .t{flex:1;min-width:0}
+.addon .t b{display:block;font-weight:700;font-size:.97rem}
+.addon .t small{display:block;font-size:.82rem;color:var(--muted);line-height:1.35}
+.addon .p{flex:none;font-weight:700;color:var(--brand);font-variant-numeric:tabular-nums;font-size:.95rem}
+.addon:has(input:checked){border-color:var(--brand);background:#F3FBF8}
+.addon.off{opacity:.5;cursor:not-allowed}
+.addon.off .p{color:var(--muted);font-weight:500;font-size:.8rem}
+
+.notebox{margin-top:10px;background:#FFF1EC;border:1.5px solid #FFC9B9;border-radius:14px;padding:10px 12px;font-size:.88rem;color:#5A2516}
+
+/* Stepper */
+.counter{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.stepper{display:inline-flex;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:3px}
+.stepper button{width:44px;height:44px;border:0;border-radius:50%;background:var(--bg);color:var(--brand);font:700 1.4rem/1 var(--body);cursor:pointer}
+.stepper button:disabled{opacity:.35;cursor:not-allowed}
+.stepper output{min-width:44px;text-align:center;font:600 1.3rem var(--display);font-variant-numeric:tabular-nums}
+
+/* Result: the price hangs on a coral name tag */
+.result{margin-top:30px;background:var(--card);border-radius:26px;padding:22px 18px 18px;display:grid;gap:14px;border:1.5px solid var(--line)}
+.result > h2{font:600 1.3rem var(--display);margin:0}
+.tag{position:relative;background:var(--accent);color:var(--accent-ink);border-radius:22px;padding:18px 16px 16px 56px}
+.tag::before{content:"";position:absolute;left:18px;top:50%;width:24px;height:24px;margin-top:-12px;border-radius:50%;background:var(--card);box-shadow:inset 0 0 0 4px rgba(59,20,10,.18)}
+.tag .lbl{font-weight:600;font-size:.9rem}
+.range{font:700 clamp(1.75rem,7.5vw,2.3rem)/1.05 var(--display);white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tag .time{font-weight:600;font-size:.95rem;margin-top:4px}
+.break{display:grid;grid-template-columns:1fr auto;gap:6px 0;font-size:.92rem;font-variant-numeric:tabular-nums;margin:0;padding-top:4px}
+.break dt{color:var(--muted);padding-right:14px} .break dd{margin:0;text-align:right;font-weight:700}
+.break dd.save{color:var(--brand)}
+.break .tot{border-top:1.5px dashed var(--line);padding-top:8px;color:var(--ink);font-weight:700}
+h3.how{font:600 1.02rem var(--display);margin:0}
+.cta{display:block;text-align:center;text-decoration:none;background:var(--brand);color:var(--brand-ink);font:600 1.15rem var(--display);padding:14px;border-radius:16px;min-height:52px}
+.ghost{display:block;width:100%;min-height:48px;text-align:center;background:#fff;color:var(--brand);border:1.5px solid var(--brand);font:700 .98rem var(--body);padding:11px;border-radius:16px;cursor:pointer}
+.small{font-size:.8rem;color:var(--muted);line-height:1.5;margin:0}
+.ph{background:#FFF6DD;border:1px dashed #E3C77A;border-radius:6px;padding:2px 6px;color:#6B5413}
+textarea.copy{width:100%;min-height:140px;font:.82rem/1.4 ui-monospace,monospace;border:1.5px solid var(--line);border-radius:12px;padding:10px}
+.notes{display:grid;gap:8px}
+.notes:empty{display:none}
+
+/* Sticky bar */
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--brand);color:var(--brand-ink);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 24px rgba(14,60,58,.22);z-index:5}
+.bar .in{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.bar .lbl{font-size:.8rem;opacity:.9}
+.bar .val{font:700 1.35rem/1.1 var(--display);font-variant-numeric:tabular-nums}
+.bar a{margin-left:auto;background:var(--accent);color:var(--accent-ink);text-decoration:none;font:600 1rem var(--display);padding:12px 16px;border-radius:14px;white-space:nowrap;min-height:44px;display:flex;align-items:center}
+
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.addon:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+.embedded .bar{display:none}
+.embedded .wrap{padding-bottom:24px}
+@media (min-width:600px){
+  .wrap{padding-top:28px}
+  header.top{padding:26px 28px 28px}
+  header.top h1{font-size:2.3rem}
+  .result{padding:26px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .cards button,.sizes button,.pills button,.addon{transition:background-color .15s,border-color .15s}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="paw" viewBox="0 0 64 64">
+    <ellipse cx="14" cy="26" rx="6.5" ry="8.5" transform="rotate(-20 14 26)" fill="currentColor"/>
+    <ellipse cx="25" cy="14" rx="6.5" ry="9" transform="rotate(-6 25 14)" fill="currentColor"/>
+    <ellipse cx="39" cy="14" rx="6.5" ry="9" transform="rotate(6 39 14)" fill="currentColor"/>
+    <ellipse cx="50" cy="26" rx="6.5" ry="8.5" transform="rotate(20 50 26)" fill="currentColor"/>
+    <path d="M32 31c-7 0-17 11-17 19 0 6 5 9 10 8 3-.5 4.5-2 7-2s4 1.5 7 2c5 1 10-2 10-8 0-8-10-19-17-19z" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <svg class="bigpaw" aria-hidden="true"><use href="#paw"/></svg>
+    <svg class="bigpaw2" aria-hidden="true"><use href="#paw"/></svg>
+    <div class="firm"><svg aria-hidden="true"><use href="#paw"/></svg><span id="firmName"></span><span class="demo" id="demoTag">Demo</span></div>
+    <h1>How much is a groom?</h1>
+    <p>Tell us about your dog and see a price range straight away. No sign-up needed.</p>
+  </header>
+
+  <section class="step" aria-labelledby="s1">
+    <h2 id="s1"><span class="n">1</span>Your dog</h2>
+    <div class="q">
+      <label class="lab" for="breed">Pick a breed (optional)</label>
+      <select id="breed"></select>
+      <p class="hint" id="breedHint">This fills in size and coat for you. You can still change them below.</p>
+    </div>
+    <div class="q">
+      <span class="lab" id="sizeLab">Size</span>
+      <div class="sizes" id="size" role="group" aria-labelledby="sizeLab"></div>
+    </div>
+    <div class="q">
+      <span class="lab" id="coatLab">Coat</span>
+      <div class="cards" id="coat" role="group" aria-labelledby="coatLab"></div>
+    </div>
+  </section>
+
+  <section class="step" aria-labelledby="s2">
+    <h2 id="s2"><span class="n">2</span>The groom</h2>
+    <div class="q">
+      <span class="lab" id="svcLab">Service</span>
+      <div class="cards" id="service" role="group" aria-labelledby="svcLab"></div>
+    </div>
+    <div class="q">
+      <span class="lab" id="addLab">Extras</span>
+      <div class="addons" id="addons" role="group" aria-labelledby="addLab"></div>
+    </div>
+  </section>
+
+  <section class="step" aria-labelledby="s3">
+    <h2 id="s3"><span class="n">3</span>A bit more about them</h2>
+    <div class="q">
+      <span class="lab" id="condLab">Coat condition today</span>
+      <div class="pills" id="condition" role="group" aria-labelledby="condLab"></div>
+    </div>
+    <div class="q">
+      <span class="lab" id="tempLab">How are they at the groomer's?</span>
+      <div class="pills" id="temperament" role="group" aria-labelledby="tempLab"></div>
+    </div>
+    <div class="q">
+      <span class="lab" id="dogsLab">How many dogs?</span>
+      <div class="counter">
+        <div class="stepper" role="group" aria-labelledby="dogsLab">
+          <button type="button" id="dogsMinus" aria-label="One fewer dog">−</button>
+          <output id="dogs" aria-live="polite">1</output>
+          <button type="button" id="dogsPlus" aria-label="One more dog">+</button>
+        </div>
+        <span class="hint" id="dogsHint" style="margin:0"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="result" aria-labelledby="resH">
+    <h2 id="resH">Your price</h2>
+    <div class="tag" aria-live="polite">
+      <div class="lbl" id="tagLbl"></div>
+      <div class="range" id="range"></div>
+      <div class="time" id="time"></div>
+    </div>
+    <div class="notes" id="notes"></div>
+    <h3 class="how">How we worked this out</h3>
+    <dl class="break" id="break"></dl>
+    <a class="cta" id="cta" href="#" target="_blank" rel="noopener"></a>
+    <button class="ghost" id="copyBtn" type="button">Copy my details</button>
+    <textarea class="copy" id="copyBox" readonly hidden aria-label="Your details to copy"></textarea>
+    <p class="small" id="smallprint"></p>
+    <p class="small" id="phone"></p>
+  </section>
+</div>
+
+<div class="bar" aria-hidden="true"><div class="in">
+  <div><div class="lbl">Your price</div><div class="val" id="barVal"></div></div>
+  <a id="barCta" href="#" target="_blank" rel="noopener" tabindex="-1">Book</a>
+</div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const gbp = v => "£" + Math.round(v).toLocaleString("en-GB");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let state, SUMMARY = "";
+
+// Hours shown as 1, 1¼, 1½, 1¾ …; under an hour shown in minutes.
+function fmtTime(mins){
+  if (mins < 60) return Math.max(5, Math.round(mins / 5) * 5) + " minutes";
+  const q = Math.round(mins / 15), h = Math.floor(q / 4), f = ["", "¼", "½", "¾"][q % 4];
+  return h + f + (q === 4 ? " hour" : " hours");
+}
+function fmtTimeRange(lo, hi){
+  const a = fmtTime(lo), b = fmtTime(hi);
+  if (a === b) return "About " + a;
+  if (lo >= 60 && hi >= 60) return "About " + a.replace(/ hours?$/, "") + " to " + b;
+  if (lo < 60 && hi < 60) return "About " + a.replace(" minutes", "") + " to " + b;
+  return "About " + a + " to " + b;
+}
+function addonPrice(key){
+  const a = PRICES.addons[key];
+  if (key === "strip") return PRICES.handStripRate * PRICES.handStripHours[state.size];
+  return typeof a.price === "object" ? a.price[state.size] : a.price;
+}
+function addonMinutes(key){
+  if (key === "strip") return PRICES.handStripHours[state.size] * 60;
+  return PRICES.addons[key].minutes;
+}
+function allowedAddons(){
+  const list = PRICES.services[state.service].addons;
+  return list.filter(k => !(PRICES.addons[k].coats && !PRICES.addons[k].coats.includes(state.coat)));
+}
+function offReason(k){
+  const a = PRICES.addons[k];
+  if (!PRICES.services[state.service].addons.includes(k)) return "Not with this service";
+  return "Wire coats only";
+}
+
+// Price for one dog, and minutes at the salon for one dog.
+function calc(){
+  const P = PRICES, svc = P.services[state.service];
+  const base = P.basePrice[state.size][state.service];
+  const coatM = svc.usesCoat ? P.coats[state.coat].price : 1;
+  const condM = svc.usesCondition ? P.conditions[state.condition].price : 1;
+  const tempM = P.temperaments[state.temperament].price;
+  const lines = [[`${svc.label}, ${P.sizes[state.size].label.toLowerCase()} dog`, base]];
+  const afterCoat = base * coatM, afterCond = afterCoat * condM, groom = afterCond * tempM;
+  if (svc.usesCoat && coatM !== 1) lines.push([`${P.coats[state.coat].label} coat`, afterCoat - base]);
+  if (svc.usesCondition && condM !== 1) lines.push([`${P.conditions[state.condition].label} (extra time)`, afterCond - afterCoat]);
+  if (tempM !== 1) lines.push([`${P.temperaments[state.temperament].label} (extra time and care)`, groom - afterCond]);
+  let one = groom;
+  let mins = P.minutes[state.size][state.service] * (svc.usesCoat ? P.coats[state.coat].time : 1) *
+             (svc.usesCondition ? P.conditions[state.condition].time : 1) * P.temperaments[state.temperament].time;
+  const allowed = allowedAddons();
+  const chosen = [...state.addons].filter(k => allowed.includes(k));
+  chosen.forEach(k => {
+    const p = addonPrice(k); one += p; mins += addonMinutes(k);
+    const lbl = k === "strip" ? `${P.addons[k].label} (about ${fmtTime(P.handStripHours[state.size] * 60)} at ${gbp(P.handStripRate)}/hr)` : P.addons[k].label;
+    lines.push([lbl, p]);
+  });
+  // Several dogs: each extra dog gets the discount and adds part of one dog's time.
+  const n = state.dogs;
+  let total = one;
+  if (n > 1){
+    const extraFull = one * (n - 1), saving = extraFull * P.multiDogDiscount;
+    lines.push([`${n - 1} more dog${n > 2 ? "s" : ""} with the same groom`, extraFull]);
+    lines.push([`Multi-dog saving (${Math.round(P.multiDogDiscount * 100)}% off each extra dog)`, -saving]);
+    total = one + extraFull - saving;
+  }
+  if (total < P.minimumCharge){ lines.push(["Minimum charge applies", P.minimumCharge - total]); total = P.minimumCharge; }
+  return {total, mins, lines, chosen, n};
+}
+
+function pressed(groupId, val){
+  $(groupId).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === val)));
+}
+
+function buildControls(){
+  const P = PRICES;
+  $("breed").innerHTML = `<option value="">Not sure / other breed</option>` +
+    P.breeds.map((b, i) => `<option value="${i}">${esc(b[0])}</option>`).join("");
+  const sizeKeys = Object.keys(P.sizes);
+  $("size").innerHTML = sizeKeys.map((k, i) => {
+    const px = 16 + i * 6;
+    return `<button type="button" data-v="${k}"><svg width="${px}" height="${px}" aria-hidden="true"><use href="#paw"/></svg>${esc(P.sizes[k].label)}<small>${esc(P.sizes[k].eg)}</small></button>`;
+  }).join("");
+  $("coat").innerHTML = Object.entries(P.coats).map(([k, c]) =>
+    `<button type="button" data-v="${k}">${esc(c.label)}<small>${esc(c.eg)}</small></button>`).join("");
+  $("service").innerHTML = Object.entries(P.services).map(([k, s]) =>
+    `<button type="button" data-v="${k}">${esc(s.label)}<small>${esc(s.desc)}</small></button>`).join("");
+  $("condition").innerHTML = Object.entries(P.conditions).map(([k, c]) =>
+    `<button type="button" data-v="${k}">${esc(c.label)}</button>`).join("");
+  $("temperament").innerHTML = Object.entries(P.temperaments).map(([k, c]) =>
+    `<button type="button" data-v="${k}">${esc(c.label)}</button>`).join("");
+}
+
+function renderAddons(){
+  const P = PRICES, allowed = allowedAddons();
+  $("addons").innerHTML = Object.entries(P.addons).map(([k, a]) => {
+    const ok = allowed.includes(k);
+    const price = k === "strip" ? `${gbp(addonPrice(k))}` : gbp(addonPrice(k));
+    return `<label class="addon${ok ? "" : " off"}"><input type="checkbox" data-k="${k}" ${ok && state.addons.has(k) ? "checked" : ""} ${ok ? "" : "disabled"}>
+      <span class="t"><b>${esc(a.label)}</b><small>${esc(a.desc)}</small></span>
+      <span class="p">${ok ? "+" + price : offReason(k)}</span></label>`;
+  }).join("");
+}
+
+function render(){
+  const P = PRICES, svc = P.services[state.service];
+  pressed("size", state.size); pressed("coat", state.coat); pressed("service", state.service);
+  pressed("condition", state.condition); pressed("temperament", state.temperament);
+  renderAddons();
+  $("dogs").textContent = state.dogs;
+  $("dogsMinus").disabled = state.dogs <= 1; $("dogsPlus").disabled = state.dogs >= P.maxDogs;
+  $("dogsHint").textContent = state.dogs > 1 ? `Priced as dogs of a similar size and coat. ${Math.round(P.multiDogDiscount * 100)}% off each extra dog. Time shown is per dog.` : `Bringing a pair? Extra dogs get ${Math.round(P.multiDogDiscount * 100)}% off.`;
+
+  const r = calc();
+  const lo = Math.max(1, Math.round(r.total * P.rangeLow)), hi = Math.max(lo + 1, Math.round(r.total * P.rangeHigh));
+  const txt = `${gbp(lo)} to ${gbp(hi)}`;
+  const timeTxt = fmtTimeRange(r.mins * P.timeLow, r.mins * P.timeHigh) + " at the salon" + (r.n > 1 ? " per dog" : "");
+  $("tagLbl").textContent = r.n > 1 ? `For ${r.n} dogs` : "For one dog";
+  $("range").textContent = txt;
+  $("barVal").textContent = txt;
+  $("time").textContent = timeTxt;
+
+  $("break").innerHTML = r.lines.map(([k, v]) => {
+    const save = v < 0;
+    return `<dt>${esc(k)}</dt><dd class="${save ? "save" : ""}">${save ? gbp(-v) + " off" : (r.lines[0][0] === k ? "" : "+") + gbp(v)}</dd>`;
+  }).join("") + `<dt class="tot">Before we round to a range</dt><dd class="tot">${gbp(r.total)}</dd>`;
+
+  const notes = [];
+  if (svc.usesCondition && state.condition === "matted") notes.push(P.notes.matted);
+  if (svc.usesCoat && state.coat === "wire" && !r.chosen.includes("strip")) notes.push(P.notes.wireNoStrip);
+  if (state.service === "puppy") notes.push(P.notes.puppy);
+  if (state.temperament !== "happy") notes.push(P.notes.temperament);
+  $("notes").innerHTML = notes.map(t => `<div class="notebox">${esc(t)}</div>`).join("");
+
+  $("smallprint").innerHTML = esc(BRAND.smallprint) + (BRAND.demo ? ' <span class="ph">Demo prices: each business sets its own.</span>' : "");
+
+  const breed = $("breed").value === "" ? "Not given" : P.breeds[+$("breed").value][0];
+  SUMMARY = `Grooming enquiry for ${BRAND.name}\n` +
+    `Breed: ${breed}\n` +
+    `Size: ${P.sizes[state.size].label} (${P.sizes[state.size].eg.replace(/^e\.g\. /, "like a ")})\n` +
+    `Coat: ${P.coats[state.coat].label}\n` +
+    `Service: ${svc.label}\n` +
+    `Extras: ${r.chosen.length ? r.chosen.map(k => P.addons[k].label).join(", ") : "None"}\n` +
+    (svc.usesCondition ? `Coat condition: ${P.conditions[state.condition].label}\n` : "") +
+    `Temperament: ${P.temperaments[state.temperament].label}\n` +
+    `Number of dogs: ${r.n}\n` +
+    `Estimate shown: ${txt}\n` +
+    `Time at the salon: ${timeTxt.replace(/^About/, "about")}`;
+}
+
+function wire(){
+  const pick = (id, key) => $(id).addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return; state[key] = b.dataset.v; render();
+  });
+  pick("size", "size"); pick("coat", "coat"); pick("service", "service");
+  pick("condition", "condition"); pick("temperament", "temperament");
+  $("breed").addEventListener("change", e => {
+    if (e.target.value === "") return render();
+    const b = PRICES.breeds[+e.target.value];
+    state.size = b[1]; state.coat = b[2]; render();
+  });
+  $("addons").addEventListener("change", e => {
+    const el = e.target.closest("input[data-k]"); if (!el) return;
+    if (el.checked) state.addons.add(el.dataset.k); else state.addons.delete(el.dataset.k);
+    render();
+    const again = $("addons").querySelector(`input[data-k="${el.dataset.k}"]`); if (again) again.focus();
+  });
+  $("dogsMinus").onclick = () => { state.dogs = Math.max(1, state.dogs - 1); render(); };
+  $("dogsPlus").onclick = () => { state.dogs = Math.min(PRICES.maxDogs, state.dogs + 1); render(); };
+  $("copyBtn").onclick = async () => {
+    const b = $("copyBtn"), box = $("copyBox");
+    let ok = false;
+    try { await navigator.clipboard.writeText(SUMMARY); ok = true; } catch (e) {
+      try { box.value = SUMMARY; box.hidden = false; box.select(); ok = document.execCommand("copy"); } catch (e2) { ok = false; }
+    }
+    if (ok){ box.hidden = true; b.textContent = "Copied. Paste it into your booking message"; }
+    else { box.value = SUMMARY; box.hidden = false; box.select(); b.textContent = "Select and copy the text below"; }
+    clearTimeout(b._t); b._t = setTimeout(() => b.textContent = "Copy my details", 3000);
+  };
+}
+
+function init(){
+  const r = document.documentElement.style;
+  r.setProperty("--brand", BRAND.colour); r.setProperty("--accent", BRAND.accent);
+  r.setProperty("--accent-ink", BRAND.accentInk); r.setProperty("--bg", BRAND.background);
+  $("firmName").textContent = BRAND.name; $("demoTag").hidden = !BRAND.demo;
+  $("cta").href = $("barCta").href = BRAND.bookingUrl;
+  $("cta").textContent = BRAND.bookingLabel;
+  $("phone").textContent = `Prefer to talk? Call ${BRAND.phone}`;
+  const d = PRICES.defaults;
+  state = {size:d.size, coat:d.coat, service:d.service, condition:d.condition, temperament:d.temperament, dogs:d.dogs, addons:new Set(d.addons)};
+  buildControls(); wire();
+  const bi = PRICES.breeds.findIndex(b => b[0] === d.breed);
+  if (bi >= 0){ $("breed").value = String(bi); state.size = PRICES.breeds[bi][1]; state.coat = PRICES.breeds[bi][2]; }
+  render();
+}
+
+/* ============ BRAND & PRICE SETTINGS: each business edits these ============ */
+const BRAND = {
+  name: "Example Grooming Co.",            // invented demo business
+  demo: true,                              // shows the "Demo" badge and demo-price note
+  colour: "#0E7C78",                       // main colour (teal): header, selected options, button
+  accent: "#FF8466",                       // accent colour (coral): price tag, paw prints
+  accentInk: "#3B140A",                    // text colour used on top of the accent
+  background: "#E8F6F0",                   // page background (mint)
+  bookingUrl: "https://example.com/book",  // where "Book an appointment" goes
+  bookingLabel: "Book an appointment",     // main button text
+  phone: "01234 567890",                   // placeholder number
+  smallprint: "This is an estimate, not a fixed price. We'll confirm the price after we've met your dog and checked their coat on the day.",
+};
+const PRICES = { // Demo prices only: the business sets its own.
+  sizes: {                                 // size buttons: label and example breed
+    toy:    {label: "Toy",    eg: "e.g. Chihuahua"},
+    small:  {label: "Small",  eg: "e.g. Shih Tzu"},
+    medium: {label: "Medium", eg: "e.g. Cocker Spaniel"},
+    large:  {label: "Large",  eg: "e.g. Labrador"},
+    giant:  {label: "Giant",  eg: "e.g. Newfoundland"},
+  },
+  services: {                              // usesCoat/usesCondition: whether coat and condition change the price; addons: extras allowed
+    full:  {label: "Full groom",     desc: "Bath, dry, cut, nails and ears",                    usesCoat: true,  usesCondition: true,  addons: ["deshed", "teeth", "medicated", "strip", "face"]},
+    bath:  {label: "Bath & tidy",    desc: "Bath, dry, brush out, nails and a tidy round the face and feet", usesCoat: true, usesCondition: true, addons: ["deshed", "teeth", "medicated", "strip", "face"]},
+    puppy: {label: "Puppy intro",    desc: "A short, gentle first visit for puppies under 6 months", usesCoat: false, usesCondition: false, addons: ["teeth", "face"]},
+    nails: {label: "Nail clip only", desc: "A quick nail trim, no bath",                         usesCoat: false, usesCondition: false, addons: ["teeth"]},
+  },
+  basePrice: {                             // £ per dog, by size (rows) and service (columns)
+    // Full groom based on Teesside prices seen Oct 2026 (small ~£42, medium ~£48, large ~£60; giant ~£75 is a national figure).
+    // Coat multipliers are applied on top, so these bases sit slightly lower. Bath & puppy scaled from ~£25 local figures.
+    toy:    {full: 36, bath: 22, puppy: 25, nails: 10},
+    small:  {full: 40, bath: 25, puppy: 25, nails: 10},
+    medium: {full: 46, bath: 30, puppy: 28, nails: 10},
+    large:  {full: 56, bath: 36, puppy: 30, nails: 10},
+    giant:  {full: 70, bath: 45, puppy: 32, nails: 12},
+  },
+  minutes: {                               // minutes per dog at the salon, by size and service (before coat/condition/temperament)
+    toy:    {full: 90,  bath: 60,  puppy: 45, nails: 15},
+    small:  {full: 105, bath: 70,  puppy: 45, nails: 15},
+    medium: {full: 135, bath: 90,  puppy: 60, nails: 15},
+    large:  {full: 165, bath: 110, puppy: 60, nails: 20},
+    giant:  {full: 210, bath: 140, puppy: 75, nails: 20},
+  },
+  coats: {                                 // price: multiplier on the groom price; time: multiplier on minutes
+    smooth: {label: "Smooth or short",     eg: "e.g. Pug, Staffie, Beagle",                    price: 0.9,  time: 0.85},
+    double: {label: "Double or long",      eg: "e.g. Husky, Labrador, Shih Tzu",              price: 1.15, time: 1.2},
+    curly:  {label: "Curly or wool",       eg: "e.g. Poodle crosses, Bichon",                       price: 1.2,  time: 1.25},
+    wire:   {label: "Wire",                eg: "e.g. Schnauzer, Westie. Clipped unless you add hand-stripping", price: 1.05, time: 1.05},
+  },
+  addons: {                                // price: £ flat, or £ by size; minutes: extra time. Hand-stripping uses handStripRate × handStripHours
+    deshed:    {label: "De-shed treatment",     desc: "Extra bath and blow-out to lift loose undercoat", price: {toy: 8, small: 10, medium: 12, large: 15, giant: 20}, minutes: 20},
+    teeth:     {label: "Teeth brushing",        desc: "A quick brush with dog toothpaste",                price: 10, minutes: 5},
+    medicated: {label: "Medicated / flea bath", desc: "Using a shampoo you or your vet provide, or ours", price: 8,  minutes: 10},
+    strip:     {label: "Hand-stripping",        desc: "For wire coats, charged by the hour",              minutes: 0, coats: ["wire"]}, // coats: only offered for these coats
+    face:      {label: "Face & paw refresh",    desc: "A gentle face wash and paw balm",                  price: 6,  minutes: 10},
+  },
+  handStripRate: 40,                       // £ per hour of hand-stripping
+  handStripHours: {toy: 0.75, small: 1, medium: 1.5, large: 2, giant: 2.5}, // typical hours of hand-stripping by size
+  conditions: {                            // price/time multipliers for coat condition (not used for puppy intro or nails)
+    brushed: {label: "Well brushed", price: 1,    time: 1},
+    knots:   {label: "Some knots",   price: 1.15, time: 1.15},
+    matted:  {label: "Matted",       price: 1.35, time: 1.4},
+  },
+  temperaments: {                          // price/time multipliers for how the dog copes
+    happy:   {label: "Happy",                 price: 1,    time: 1},
+    nervous: {label: "Nervous",               price: 1.1,  time: 1.2},
+    extra:   {label: "Needs extra handling",  price: 1.25, time: 1.4},
+  },
+  maxDogs: 3,                              // most dogs per booking in this tool
+  multiDogDiscount: 0.10,                  // fraction off each extra dog (0.10 = 10%)
+  minimumCharge: 12,                       // £ lowest total we charge
+  rangeLow: 0.9, rangeHigh: 1.15,          // price range shown around the estimate
+  timeLow: 0.85, timeHigh: 1.15,           // time range shown around the estimate
+  notes: {                                 // messages shown under the price
+    matted: "Heavily matted coats may need clipping short for your dog's welfare. We'll always talk this through with you first.",
+    wireNoStrip: "Wire coats are clipped as standard. Hand-stripping isn't included: tick it in Extras if you'd like it.",
+    puppy: "The puppy intro is for puppies under 6 months. It's about getting used to the salon, so it's short and gentle.",
+    temperament: "Thanks for telling us. We'll allow extra time so your dog can go at their own pace.",
+  },
+  breeds: [                                // [name, size, coat]: picking a breed sets these. A starting guess only
+    ["Bernese Mountain Dog", "giant", "double"],
+    ["Beagle", "medium", "smooth"],
+    ["Bichon Frise", "small", "curly"],
+    ["Border Collie", "medium", "double"],
+    ["Border Terrier", "small", "wire"],
+    ["Cavalier King Charles Spaniel", "small", "double"],
+    ["Cavapoo", "small", "curly"],
+    ["Chihuahua", "toy", "smooth"],
+    ["Cockapoo", "medium", "curly"],
+    ["Cocker Spaniel", "medium", "double"],
+    ["Dachshund", "small", "smooth"],
+    ["English Springer Spaniel", "medium", "double"],
+    ["French Bulldog", "small", "smooth"],
+    ["German Shepherd", "large", "double"],
+    ["Golden Retriever", "large", "double"],
+    ["Great Dane", "giant", "smooth"],
+    ["Jack Russell Terrier", "small", "smooth"],
+    ["Labradoodle", "large", "curly"],
+    ["Labrador Retriever", "large", "double"],
+    ["Lhasa Apso", "small", "double"],
+    ["Miniature Schnauzer", "small", "wire"],
+    ["Newfoundland", "giant", "double"],
+    ["Pomeranian", "toy", "double"],
+    ["Pug", "small", "smooth"],
+    ["Shih Tzu", "small", "double"],
+    ["Siberian Husky", "large", "double"],
+    ["Staffordshire Bull Terrier", "medium", "smooth"],
+    ["Toy Poodle", "toy", "curly"],
+    ["West Highland White Terrier", "small", "wire"],
+    ["Yorkshire Terrier", "toy", "double"],
+  ],
+  defaults: {breed: "Cockapoo", size: "medium", coat: "curly", service: "full", condition: "brushed", temperament: "happy", dogs: 1, addons: []}, // starting answers
+};
+/* ========================================================================== */
+
+init();
+</script>
+
+<script>
+(function(){
+  var embedded = false; try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+  if (!embedded) return;
+  document.documentElement.classList.add("embedded");
+  document.documentElement.style.minHeight = "0"; document.body.style.minHeight = "0";
+  var last = 0;
+  function send(){ var b = document.body, cs = getComputedStyle(b), lc = b.lastElementChild, mb = lc ? parseFloat(getComputedStyle(lc).marginBottom) || 0 : 0;
+    var h = Math.ceil(b.getBoundingClientRect().height + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom) + mb);
+    if (Math.abs(h - last) < 2) return; last = h;
+    parent.postMessage({type: "tool-height", height: h}, "*"); }
+  window.addEventListener("load", send);
+  if (window.ResizeObserver) new ResizeObserver(send).observe(document.body); else setInterval(send, 500);
+  send();
+})();
+</script>
+</body>
+</html>

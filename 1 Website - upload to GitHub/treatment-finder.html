@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Treatment Finder</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,500;0,600;1,500&family=Jost:wght@400;500;600&display=swap">
+<style>
+/* Layout: a calm salon "menu card". One question per screen in a large serif; results read like a printed
+   treatment menu with dotted leaders between name and price. Colours come from BRAND settings. */
+:root{
+  --plum:#4A2340; --plum-ink:#FFFFFF; --blush:#E8C3BC; --blush-soft:#F6E4E0;
+  --shell:#FBF5F2; --paper:#FFFFFF; --ink:#2E1F2A; --muted:#6E5D68; --line:#EADBD6; --sage:#6F8A74; --sage-soft:#E6EDE6;
+  --display:"Cormorant",Georgia,serif; --body:"Jost",system-ui,sans-serif;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--shell);color:var(--ink);font:16px/1.55 var(--body);margin:0;-webkit-font-smoothing:antialiased}
+.wrap{max-width:680px;margin:0 auto;padding:16px 16px 56px}
+button{font-family:inherit}
+
+header.top{position:relative;overflow:hidden;background:var(--plum);color:var(--plum-ink);border-radius:22px 22px 22px 4px;padding:20px 20px 22px}
+header.top::after{content:"";position:absolute;right:-60px;bottom:-90px;width:200px;height:200px;border-radius:50%;border:1px solid rgba(255,255,255,.22);box-shadow:0 0 0 18px rgba(232,195,188,.08),0 0 0 40px rgba(232,195,188,.05)}
+.firm{display:flex;align-items:center;gap:8px;font:500 .9rem var(--body);position:relative;z-index:1;opacity:.92}
+.demo{font:600 .7rem var(--body);letter-spacing:.04em;background:var(--blush);color:var(--plum);padding:2px 9px;border-radius:999px}
+header.top h1{font:500 2.1rem/1.05 var(--display);margin:10px 0 6px;position:relative;z-index:1;max-width:18ch;text-wrap:balance}
+header.top p{margin:0;font-size:.95rem;opacity:.88;position:relative;z-index:1;max-width:42ch}
+
+.card{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:20px 18px;margin-top:14px}
+.prog{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.dots{display:flex;gap:6px;list-style:none;margin:0;padding:0}
+.dots li{width:9px;height:9px;border-radius:50%;background:var(--line);transition:background .2s,width .2s}
+.dots li.done{background:var(--blush)}
+.dots li.now{background:var(--plum);width:22px;border-radius:999px}
+.prog .of{font-size:.82rem;color:var(--muted);margin-left:auto}
+.q{font:500 1.85rem/1.15 var(--display);margin:8px 0 4px;text-wrap:balance;outline:none}
+.hint{margin:0 0 14px;color:var(--muted);font-size:.92rem}
+
+.opts{display:grid;gap:8px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;text-align:left;background:var(--shell);border:1px solid var(--line);border-radius:14px;padding:10px 14px;color:var(--ink);font:500 1rem var(--body);cursor:pointer;transition:background .15s,border-color .15s}
+.opt:hover{border-color:var(--blush)}
+.opt .mk{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--blush);display:grid;place-items:center;background:#fff}
+.opt.multi .mk{border-radius:7px}
+.opt .tx{display:grid;gap:1px;min-width:0}
+.opt small{font-weight:400;color:var(--muted);font-size:.84rem}
+.opt[aria-pressed="true"]{background:var(--blush-soft);border-color:var(--plum)}
+.opt[aria-pressed="true"] .mk{background:var(--plum);border-color:var(--plum)}
+.opt[aria-pressed="true"] .mk::after{content:"";width:6px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+
+.nav{display:flex;gap:10px;margin-top:18px;align-items:center}
+.btn{min-height:48px;border-radius:999px;padding:10px 22px;font:600 .98rem var(--body);cursor:pointer;border:1.5px solid var(--plum);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center}
+.btn.primary{background:var(--plum);color:var(--plum-ink)}
+.btn.primary[disabled]{opacity:.4;cursor:not-allowed}
+.btn.quiet{background:transparent;color:var(--plum)}
+.nav .btn.primary{margin-left:auto}
+.linkish{background:none;border:0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;font:500 .9rem var(--body);cursor:pointer;min-height:44px;padding:0 4px}
+
+/* Results */
+.res-h{font:500 2rem/1.1 var(--display);margin:4px 0 6px;outline:none}
+.res-sub{margin:0 0 14px;color:var(--muted)}
+.kind{background:var(--blush-soft);border-radius:14px;padding:12px 14px;margin:0 0 14px;font-size:.95rem}
+.menu{display:grid;gap:12px;list-style:none;margin:0;padding:0}
+.item{border:1px solid var(--line);border-radius:18px;padding:16px;background:var(--paper);display:grid;gap:8px}
+.item.first{border-color:var(--blush);box-shadow:inset 4px 0 0 var(--blush)}
+.item .row{display:flex;align-items:baseline;gap:8px}
+.item h3{font:600 1.45rem/1.15 var(--display);margin:0;min-width:0}
+.item .lead{flex:1;border-bottom:2px dotted var(--blush);transform:translateY(-5px);min-width:16px}
+.item .price{font:600 1.05rem var(--body);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--plum)}
+.item .price small{font-weight:400;color:var(--muted);font-size:.8rem}
+.item .meta{font-size:.86rem;color:var(--muted)}
+.item p{margin:0;font-size:.95rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.tags li{font-size:.78rem;padding:3px 10px;border-radius:999px;background:var(--sage-soft);color:#3E5443}
+.tags li.warn{background:#F7E8D6;color:#7A4E1C}
+.item .btn{justify-self:start;min-height:44px;padding:8px 20px;font-size:.92rem}
+
+.pkg{margin-top:16px;border:1.5px dashed var(--plum);border-radius:18px;padding:16px;display:grid;gap:8px;background:var(--shell)}
+.pkg h3{margin:0;font:600 1.35rem var(--display)}
+.pkg p{margin:0;font-size:.95rem}
+.pkg .tot{font:600 1.1rem var(--body);color:var(--plum);font-variant-numeric:tabular-nums}
+.pkg .btn{justify-self:start;min-height:44px;padding:8px 20px;font-size:.92rem}
+
+.sec-h{font:600 1.25rem var(--display);margin:22px 0 6px}
+.how{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:.92rem}
+.how dt{color:var(--muted)} .how dd{margin:0}
+.notes{margin:0;padding-left:18px;font-size:.92rem;display:grid;gap:4px}
+.actions{display:grid;gap:10px;margin-top:20px}
+.actions .btn{width:100%}
+.copied{font-size:.85rem;color:var(--sage);min-height:1.3em;text-align:center;margin:0}
+textarea.copy{width:100%;min-height:140px;font:.82rem/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:8px}
+.small{font-size:.78rem;color:var(--muted);line-height:1.5;margin:14px 0 0}
+.ph{background:#FFF6DD;border:1px dashed #E3C77A;border-radius:6px;padding:1px 6px;color:#6B5413}
+.foot{display:flex;justify-content:center;margin-top:6px}
+
+button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--sage);outline-offset:2px}
+.q:focus-visible,.res-h:focus-visible{outline:none}
+.embedded .wrap{padding-bottom:20px}
+@media (min-width:600px){
+  .wrap{padding-top:28px}
+  header.top{padding:26px 28px 28px}
+  header.top h1{font-size:2.6rem}
+  .card{padding:26px 28px}
+  .q{font-size:2.2rem}
+  .opts.two{grid-template-columns:1fr 1fr}
+}
+@media (max-width:360px){
+  .item .lead{display:none}
+  .item .row{flex-wrap:wrap}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="firm"><span id="firmName">Example Beauty Studio</span><span class="demo" id="demoTag">Demo</span></div>
+    <h1>Find the right treatment for you</h1>
+    <p>Answer a few quick questions and we'll suggest treatments that suit your time and budget.</p>
+  </header>
+
+  <main class="card" id="stage" aria-live="polite"></main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const gbp = v => "£" + Math.round(v).toLocaleString("en-GB");
+const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function dur(m){ if (m < 60) return m + " min"; const h = Math.floor(m / 60), r = m % 60; return h + " hr" + (r ? " " + r + " min" : ""); }
+function label(list, v){ const o = list.find(x => x.v === v); return o ? o.label : ""; }
+
+let state, stepIdx, advanceTimer, SUMMARY = "";
+function reset(){ state = {cats:[], occasion:null, when:null, time:null, budget:null, goal:null}; stepIdx = 0; }
+
+function steps(){
+  const R = RULES;
+  return [
+    {key:"cats", multi:true, q:"What would you like help with?", hint:"Pick as many as you like.", opts:R.categories},
+    {key:"occasion", q:"Is it for a special occasion?", hint:"This helps us suggest the right finish.", opts:R.occasions},
+    {key:"when", q:"When would you like it?", hint:"Some treatments need a quick check first.", opts:R.when},
+    {key:"time", q:"How much time do you have?", hint:"For one visit.", opts:R.time},
+    {key:"budget", q:"What's your budget per visit?", hint:"We'll stick to it where we can.", opts:R.budget},
+    {key:"goal", q:"What's your main skin goal?", hint:"Just for your face and skin treatment.", opts:R.skinGoals, show:() => state.cats.includes("face")},
+  ].filter(s => !s.show || s.show());
+}
+function answered(s){ return s.multi ? state[s.key].length > 0 : state[s.key] !== null; }
+
+/* ---------- quiz screens ---------- */
+function render(focus){
+  clearTimeout(advanceTimer);
+  const list = steps();
+  if (stepIdx >= list.length) return renderResult(focus);
+  const s = list[stepIdx], total = list.length + 1;
+  const dots = Array.from({length: total}, (_, i) => `<li class="${i < stepIdx ? "done" : i === stepIdx ? "now" : ""}"></li>`).join("");
+  const opts = s.opts.map(o => {
+    const on = s.multi ? state[s.key].includes(o.v) : state[s.key] === o.v;
+    return `<button type="button" class="opt${s.multi ? " multi" : ""}" data-v="${o.v}" aria-pressed="${on}"><span class="mk" aria-hidden="true"></span><span class="tx">${esc(o.label)}${o.sub ? `<small>${esc(o.sub)}</small>` : ""}</span></button>`;
+  }).join("");
+  $("stage").innerHTML = `
+    <div class="prog"><ol class="dots" aria-hidden="true">${dots}</ol><span class="of">Question ${stepIdx + 1} of ${list.length}</span></div>
+    <h2 class="q" id="qh" tabindex="-1">${esc(s.q)}</h2>
+    <p class="hint">${esc(s.hint)}</p>
+    <div class="opts${s.opts.length === 4 ? " two" : ""}" role="group" aria-labelledby="qh">${opts}</div>
+    <div class="nav">
+      ${stepIdx > 0 ? `<button type="button" class="btn quiet" data-nav="back">Back</button>` : ""}
+      <button type="button" class="btn primary" data-nav="next" ${answered(s) ? "" : "disabled"}>${stepIdx === list.length - 1 ? "See my treatments" : "Next"}</button>
+    </div>
+    ${stepIdx > 0 ? `<div class="foot"><button type="button" class="linkish" data-nav="restart">Start again</button></div>` : ""}`;
+  if (focus) $("qh").focus({preventScroll:false});
+}
+
+$("stage").addEventListener("click", e => {
+  const nav = e.target.closest("[data-nav]");
+  if (nav){
+    const n = nav.dataset.nav;
+    if (n === "next" && !nav.disabled) stepIdx++;
+    if (n === "back") stepIdx = Math.max(0, stepIdx - 1);
+    if (n === "restart") reset();
+    if (n === "copy") return copyDetails();
+    render(true); return;
+  }
+  const b = e.target.closest(".opt"); if (!b) return;
+  const s = steps()[stepIdx], v = b.dataset.v;
+  if (s.multi){
+    const a = state[s.key]; state[s.key] = a.includes(v) ? a.filter(x => x !== v) : [...a, v];
+    if (s.key === "cats" && !state.cats.includes("face")) state.goal = null;
+    render(false);
+    const again = $("stage").querySelector(`.opt[data-v="${v}"]`); if (again) again.focus();
+  } else {
+    state[s.key] = v; render(false);
+    const again = $("stage").querySelector(`.opt[data-v="${v}"]`); if (again) again.focus();
+    advanceTimer = setTimeout(() => { stepIdx++; render(true); }, reduceMotion ? 0 : RULES.autoAdvanceMs);
+  }
+});
+
+/* ---------- matching ---------- */
+function timeLimit(){ return RULES.time.find(t => t.v === state.time).maxMinutes; }
+function budgetMax(){ return RULES.budget.find(b => b.v === state.budget).max; }   // null = no limit
+
+function score(t){
+  const W = RULES.weights, why = [], lim = timeLimit(), max = budgetMax();
+  let s = W.category; why.push(label(RULES.categories, t.category));
+  if (state.occasion && t.tags.includes(state.occasion)){ s += W.occasion; why.push(RULES.occasions.find(o => o.v === state.occasion).tagText); }
+  if (t.category === "face" && state.goal && t.tags.includes(state.goal)){ s += W.skinGoal; why.push(label(RULES.skinGoals, state.goal)); }
+  if (t.minutes <= lim){ s += W.fitsTime; why.push("Fits your time"); }
+  else s -= W.overTimePer15 * Math.ceil((t.minutes - lim) / 15);
+  const inBudget = max === null || t.price <= max;
+  if (inBudget){ s += W.fitsBudget; why.push("In budget"); }
+  if (t.patchTest && state.when === "week") s -= W.patchTestSoon;
+  return {t, s, why, inBudget, inTime: t.minutes <= lim};
+}
+
+// Best of each picked category first (so every area you asked about is covered), then the next best overall.
+function pickTop(scored, n){
+  const sorted = [...scored].sort((a, b) => b.s - a.s || a.t.price - b.t.price);
+  const out = [];
+  state.cats.map(c => sorted.find(x => x.t.category === c)).filter(Boolean)
+    .sort((a, b) => b.s - a.s).forEach(x => { if (out.length < n) out.push(x); });
+  // On a tie, spread across areas rather than doubling up (e.g. two brow treatments).
+  while (out.length < n){
+    const rest = sorted.filter(x => !out.includes(x)); if (!rest.length) break;
+    const same = x => out.filter(o => o.t.category === x.t.category).length;
+    rest.sort((a, b) => (b.s - same(b) * 0.5) - (a.s - same(a) * 0.5) || a.t.price - b.t.price);
+    out.push(rest[0]);
+  }
+  return out.sort((a, b) => b.s - a.s || a.t.price - b.t.price);
+}
+
+function findPackage(picks){
+  const lim = timeLimit(), max = budgetMax(), ok = picks.filter(p => p.inBudget);
+  const combos = [];
+  if (ok.length >= 3) combos.push(ok.slice(0, 3));
+  for (let i = 0; i < ok.length; i++) for (let j = i + 1; j < ok.length; j++) combos.push([ok[i], ok[j]]);
+  const fits = combos.filter(c => {
+    if (new Set(c.map(x => x.t.category)).size < c.length) return false;   // one treatment per area, e.g. not two brow treatments
+    const m = c.reduce((a, x) => a + x.t.minutes, 0), p = c.reduce((a, x) => a + x.t.price, 0) * (1 - RULES.packageDiscountPct / 100);
+    return m <= lim && (max === null || p <= max);
+  });
+  fits.sort((a, b) => b.length - a.length || b.reduce((s, x) => s + x.s, 0) - a.reduce((s, x) => s + x.s, 0));
+  return fits[0] || null;
+}
+
+function computeResult(){
+  const cands = TREATMENTS.filter(t => state.cats.includes(t.category)).map(score);
+  const fit = cands.filter(x => x.inBudget);
+  let picks, overBudget = false;
+  if (fit.length){
+    picks = pickTop(fit, RULES.maxResults);
+    if (picks.length < RULES.maxResults){
+      cands.filter(x => !x.inBudget).sort((a, b) => a.t.price - b.t.price)
+        .slice(0, RULES.maxResults - picks.length).forEach(x => picks.push(x));
+    }
+  } else {
+    overBudget = true;
+    picks = [...cands].sort((a, b) => a.t.price - b.t.price || b.s - a.s).slice(0, RULES.maxResults);
+  }
+  return {picks, overBudget, pkg: overBudget ? null : findPackage(picks), count: cands.length};
+}
+
+/* ---------- result screen ---------- */
+function renderResult(focus){
+  const {picks, overBudget, pkg, count} = computeResult();
+  const max = budgetMax(), N = RULES.notes;
+  const total = steps().length + 1;
+  const dots = Array.from({length: total}, (_, i) => `<li class="${i < total - 1 ? "done" : "now"}"></li>`).join("");
+
+  const cards = picks.map((x, i) => {
+    const t = x.t;
+    const tags = x.why.map(w => `<li>${esc(w)}</li>`).join("") +
+      (!x.inBudget ? `<li class="warn">Over your budget</li>` : "") +
+      (!x.inTime ? `<li class="warn">Longer than your time</li>` : "") +
+      (t.patchTest ? `<li class="warn">Patch test first</li>` : "");
+    return `<li class="item${i === 0 ? " first" : ""}">
+      <div class="row"><h3>${esc(t.name)}</h3><span class="lead" aria-hidden="true"></span><span class="price"><small>from </small>${gbp(t.price)}</span></div>
+      <div class="meta">About ${dur(t.minutes)}</div>
+      <p>${esc(t.desc)}</p>
+      <ul class="tags" aria-label="Why it matched">${tags}</ul>
+      <a class="btn primary" href="${esc(BRAND.bookingUrl)}" target="_blank" rel="noopener" aria-label="Book ${esc(t.name)}">${esc(BRAND.bookingLabel)}</a>
+    </li>`;
+  }).join("");
+
+  let pkgHtml = "", pkgLine = "";
+  if (pkg){
+    const sum = pkg.reduce((a, x) => a + x.t.price, 0), mins = pkg.reduce((a, x) => a + x.t.minutes, 0);
+    const disc = RULES.packageDiscountPct > 0 ? sum * RULES.packageDiscountPct / 100 : 0;
+    const names = pkg.map(x => x.t.name);
+    const nameTxt = names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+    pkgLine = `Package idea: ${nameTxt}, about ${dur(mins)}, from ${gbp(sum - disc)}${disc ? ` (save ${gbp(disc)})` : ""}`;
+    pkgHtml = `<section class="pkg" aria-label="Package suggestion">
+      <h3>Make it a package</h3>
+      <p>Have ${esc(nameTxt)} in one visit. Together they fit your time and budget.</p>
+      <div class="tot">About ${dur(mins)}, from ${gbp(sum - disc)}${disc ? ` <small>(save ${gbp(disc)})</small>` : ""}</div>
+      <a class="btn quiet" href="${esc(BRAND.bookingUrl)}" target="_blank" rel="noopener">Book this package</a>
+    </section>`;
+  }
+
+  const notes = [];
+  const pt = picks.filter(x => x.t.patchTest).map(x => x.t.name);
+  if (pt.length){
+    notes.push(`${pt.length > 1 ? pt.slice(0, -1).join(", ") + " and " + pt[pt.length - 1] : pt[0]} ${pt.length === 1 ? "needs" : "need"} a patch test at least ${RULES.patchTestHours} hours before.`);
+    if (state.when === "week") notes.push(N.patchTestThisWeek);
+  }
+  if (state.occasion === "event") notes.push(N.bigEvent);
+  if (state.when === "month") notes.push(N.withinMonth);
+  if (picks.some(x => x.t.category === "wax") && state.occasion === "holiday") notes.push(N.waxHoliday);
+  if (!notes.length) notes.push(N.general);
+
+  const how = [
+    ["Looking for", state.cats.map(c => label(RULES.categories, c)).join(", ")],
+    ["Occasion", label(RULES.occasions, state.occasion)],
+    ["When", label(RULES.when, state.when)],
+    ["Time", label(RULES.time, state.time)],
+    ["Budget", label(RULES.budget, state.budget)],
+  ];
+  if (state.goal) how.push(["Skin goal", label(RULES.skinGoals, state.goal)]);
+
+  const head = overBudget ? "Here are the closest options" : picks.length > 1 ? "Your top treatments" : "Your best match";
+  const sub = overBudget
+    ? ""
+    : `From ${count} treatments, these suit your answers best.`;
+  const kind = overBudget
+    ? `<p class="kind">Nothing in ${esc(state.cats.length > 1 ? "these areas" : label(RULES.categories, state.cats[0]).toLowerCase())} fits within ${max !== null ? gbp(max) : "your budget"} at the moment. These are our nearest prices, starting with the lowest. We're happy to talk through options.</p>`
+    : "";
+
+  $("stage").innerHTML = `
+    <div class="prog"><ol class="dots" aria-hidden="true">${dots}</ol><span class="of">Your results</span></div>
+    <h2 class="res-h" id="rh" tabindex="-1">${head}</h2>
+    ${sub ? `<p class="res-sub">${sub}</p>` : ""}
+    ${kind}
+    <ol class="menu">${cards}</ol>
+    ${pkgHtml}
+    <h3 class="sec-h">Good to know</h3>
+    <ul class="notes">${notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>
+    <h3 class="sec-h">How we worked this out</h3>
+    <dl class="how">${how.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    <p class="small" style="margin-top:8px">We match treatments to what you picked, then favour ones that suit your occasion${state.goal ? " and skin goal" : ""} and fit your time and budget.</p>
+    <div class="actions">
+      <a class="btn primary" href="${esc(BRAND.bookingUrl)}" target="_blank" rel="noopener">${esc(BRAND.mainCtaLabel)}</a>
+      <button type="button" class="btn quiet" id="copyBtn" data-nav="copy">Copy my details</button>
+      <p class="copied" id="copied" role="status"></p>
+      <textarea class="copy" id="copyBox" readonly hidden aria-label="Your details to copy"></textarea>
+    </div>
+    <div class="nav">
+      <button type="button" class="btn quiet" data-nav="back">Back</button>
+      <button type="button" class="btn quiet" data-nav="restart" style="margin-left:auto">Start again</button>
+    </div>
+    <p class="small">${esc(BRAND.smallprint)} ${BRAND.phone ? `Prefer to talk? Call ${esc(BRAND.phone)}.` : ""} ${BRAND.demo ? '<span class="ph">Demo prices: each salon sets its own.</span>' : ""}</p>`;
+
+  SUMMARY = `Treatment Finder: ${BRAND.name}\n\nMy answers\n` +
+    how.map(([k, v]) => `- ${k}: ${v}`).join("\n") +
+    `\n\n${overBudget ? "Closest options (over my budget)" : "Suggested treatments"}\n` +
+    picks.map((x, i) => `${i + 1}. ${x.t.name}: about ${dur(x.t.minutes)}, from ${gbp(x.t.price)}${x.inBudget ? "" : " (over budget)"}${x.t.patchTest ? ", patch test needed" : ""}`).join("\n") +
+    (pkgLine ? `\n\n${pkgLine}` : "") +
+    `\n\nNotes\n` + notes.map(n => `- ${n}`).join("\n");
+
+  if (focus) $("rh").focus();
+}
+
+async function copyDetails(){
+  const out = $("copied"), box = $("copyBox");
+  let ok = false;
+  try { if (navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(SUMMARY); ok = true; } } catch (e) {}
+  if (!ok){
+    try {
+      const t = document.createElement("textarea"); t.value = SUMMARY; t.setAttribute("readonly", "");
+      t.style.position = "fixed"; t.style.opacity = "0"; t.style.top = "0"; document.body.appendChild(t);
+      t.select(); ok = document.execCommand("copy"); document.body.removeChild(t);
+    } catch (e) { ok = false; }
+  }
+  if (ok){ out.textContent = "Copied. Paste it into your booking message."; box.hidden = true; }
+  else { box.value = SUMMARY; box.hidden = false; box.select(); out.textContent = "Select and copy the text below."; }
+  setTimeout(() => { if (out.isConnected) out.textContent = ""; }, 4000);
+}
+
+/* ============ BRAND & TREATMENT SETTINGS: each salon edits these ============ */
+const BRAND = {
+  name: "Example Beauty Studio",              // invented demo business
+  demo: true,                                 // shows the "Demo" badge and demo-price note
+  colour: "#4A2340",                          // main colour (deep plum): header, buttons
+  accent: "#E8C3BC",                          // soft accent (blush): highlights, dotted leaders
+  bookingUrl: "https://example.com/book",     // where every "Book" button goes
+  bookingLabel: "Book this",                  // label on each treatment card
+  mainCtaLabel: "Book an appointment",        // label on the main button under the results
+  phone: "01234 567890",                      // placeholder
+  smallprint: "These are suggestions, not a booking. Prices are starting prices. We'll confirm your treatment and price when you book.",
+};
+
+// Demo prices only: the business sets its own.
+// category: face | lashbrow | nails | wax | massage. minutes: typical appointment length. price: "from" price in £.
+// tags: occasions (event, holiday, nightout, regular) and skin goals (glow, calm, breakouts, lines) used for matching.
+// patchTest: true if the salon needs a patch test before the first appointment.
+const TREATMENTS = [
+  {id:"express-facial",   name:"Express facial",   category:"face", minutes:30, price:30, patchTest:false, tags:["nightout","regular","glow"],
+   desc:"A quick cleanse, gentle exfoliation and moisture boost. Good when you're short on time."},
+  {id:"signature-facial", name:"Signature facial", category:"face", minutes:60, price:50, patchTest:false, tags:["event","regular","glow","lines"],
+   desc:"Our full facial with cleanse, exfoliation, massage and a mask chosen for your skin on the day."},
+  {id:"hydrating-facial", name:"Hydrating facial", category:"face", minutes:60, price:50, patchTest:false, tags:["event","holiday","glow","lines"],
+   desc:"Layers of moisture and a soothing mask. Can help skin look plumper and more radiant."},
+  {id:"calming-facial",   name:"Calming facial",   category:"face", minutes:60, price:50, patchTest:false, tags:["regular","calm"],
+   desc:"Gentle, fragrance-light products and slow massage for skin that feels easily upset."},
+  {id:"deep-cleansing-facial", name:"Deep-cleansing facial", category:"face", minutes:60, price:50, patchTest:false, tags:["regular","breakouts"],
+   desc:"A thorough cleanse with steam and extractions. Can help skin feel clearer and fresher."},
+  {id:"skin-polish",      name:"Skin polish",      category:"face", minutes:45, price:45, patchTest:false, tags:["event","nightout","glow","breakouts","lines"],
+   desc:"A gentle resurfacing treatment that lifts dull surface skin. Can help skin look smoother and brighter."},
+  {id:"lash-lift-tint",   name:"Lash lift & tint", category:"lashbrow", minutes:60, price:38, patchTest:true, tags:["holiday","event","regular"],
+   desc:"Lifts and darkens your natural lashes so they look longer, with no mascara needed."},
+  {id:"lash-extensions",  name:"Classic lash extensions (full set)", category:"lashbrow", minutes:120, price:37, patchTest:true, tags:["event","holiday","nightout"],
+   desc:"Single lashes applied one by one to your own for a fuller, natural-looking set."},
+  {id:"brow-lamination",  name:"Brow lamination",  category:"lashbrow", minutes:45, price:35, patchTest:true, tags:["event","holiday","regular"],
+   desc:"Sets your brow hairs in place for a fuller, brushed-up look."},
+  {id:"brow-shape-tint",  name:"Brow shape & tint", category:"lashbrow", minutes:20, price:20, patchTest:true, tags:["nightout","regular","event"],
+   desc:"A tidy shape and a tint matched to your colouring. Quick and easy to fit in."},
+  {id:"gel-manicure",     name:"Gel manicure",     category:"nails", minutes:45, price:30, patchTest:false, tags:["nightout","event","holiday","regular"],
+   desc:"Shaped nails, tidy cuticles and a glossy gel colour that's dry before you leave."},
+  {id:"gel-pedicure",     name:"Gel pedicure",     category:"nails", minutes:60, price:35, patchTest:false, tags:["holiday","event"],
+   desc:"A foot soak, tidy-up and long-wearing gel colour on your toes. Ready for sandals."},
+  {id:"builder-gel",      name:"Builder gel overlay", category:"nails", minutes:60, price:32, patchTest:false, tags:["regular","event"],
+   desc:"A stronger gel layer over your natural nails. Good if you want to grow them a little longer."},
+  {id:"half-leg-wax",     name:"Leg wax (half)",   category:"wax", minutes:30, price:20, patchTest:false, tags:["holiday","nightout"],
+   desc:"Lower or upper legs waxed for smooth skin."},
+  {id:"underarm-wax",     name:"Underarm wax",     category:"wax", minutes:15, price:12, patchTest:false, tags:["holiday","nightout","regular"],
+   desc:"A quick underarm wax. Easy to add to another treatment."},
+  {id:"intimate-wax",     name:"Intimate wax",     category:"wax", minutes:30, price:33, patchTest:false, tags:["holiday","event"],
+   desc:"A full intimate wax done privately and with care."},
+  {id:"back-massage",     name:"Back, neck & shoulder massage (30 min)", category:"massage", minutes:30, price:30, patchTest:false, tags:["regular","nightout"],
+   desc:"Focused massage where most of us hold tension. A good lunchtime reset."},
+  {id:"full-body-massage", name:"Full body massage (60 min)", category:"massage", minutes:60, price:50, patchTest:false, tags:["regular","event","holiday"],
+   desc:"A full hour of relaxing massage from head to toe."},
+  {id:"hot-stone-massage", name:"Hot stone massage", category:"massage", minutes:75, price:55, patchTest:false, tags:["regular","event"],
+   desc:"Warm, smooth stones and slow massage for a deeply relaxing treat."},
+];
+
+const RULES = {
+  weights: {                       // scoring points (higher = more likely to be recommended)
+    category: 10,                  // treatment is in an area you picked (required to appear at all)
+    occasion: 6,                   // treatment suits your occasion
+    skinGoal: 8,                   // face treatment matches your skin goal
+    fitsTime: 4,                   // fits in the time you have
+    overTimePer15: 3,              // points taken off for every 15 minutes over your time
+    fitsBudget: 5,                 // within your budget per visit
+    patchTestSoon: 2,              // points taken off a patch-test treatment if you want it this week
+  },
+  maxResults: 3,                   // number of treatment cards shown
+  packageDiscountPct: 0,           // % off when booked as a package (0 = no discount shown)
+  patchTestHours: 48,              // hours before treatment a patch test is needed // VERIFY: salon's own policy
+  autoAdvanceMs: 260,              // pause (milliseconds) before moving to the next question after a single choice
+  categories: [                    // question 1 (multi-select)
+    {v:"face", label:"Face & skin"},
+    {v:"lashbrow", label:"Lashes & brows"},
+    {v:"nails", label:"Nails"},
+    {v:"wax", label:"Hair removal"},
+    {v:"massage", label:"Relax & unwind", sub:"Massage"},
+  ],
+  occasions: [                     // question 2. tagText = the "why it matched" tag
+    {v:"event", label:"Wedding or big event", tagText:"Good for a big event"},
+    {v:"holiday", label:"Holiday", tagText:"Holiday ready"},
+    {v:"nightout", label:"Night out", tagText:"Good for a night out"},
+    {v:"regular", label:"Just for me", sub:"A regular treat", tagText:"Lovely as a regular treat"},
+  ],
+  when: [                          // question 3
+    {v:"week", label:"This week"},
+    {v:"month", label:"Within a month"},
+    {v:"norush", label:"No rush"},
+  ],
+  time: [                          // question 4. maxMinutes = longest single visit that counts as fitting
+    {v:"short", label:"Under 45 minutes", maxMinutes:45},
+    {v:"hour", label:"About an hour", maxMinutes:75},
+    {v:"afternoon", label:"Make an afternoon of it", maxMinutes:240},
+  ],
+  budget: [                        // question 5. max = most you'd spend per visit in £ (null = no limit)
+    {v:"b30", label:"Up to £30", max:30},
+    {v:"b60", label:"£30 to £60", max:60},
+    {v:"b100", label:"£60 to £100", max:100},
+    {v:"any", label:"No limit", max:null},
+  ],
+  skinGoals: [                     // question 6 (only if Face & skin is picked)
+    {v:"glow", label:"Glow & hydration"},
+    {v:"calm", label:"Calm & sensitive"},
+    {v:"breakouts", label:"Breakouts"},
+    {v:"lines", label:"Fine lines"},
+  ],
+  notes: {                         // friendly timing notes on the results
+    patchTestThisWeek: "As you'd like it this week, book your patch test as soon as you can.",
+    bigEvent: "For a big event, ask us about the best time to book before the day.",   // VERIFY: salon's own advice
+    withinMonth: "Within a month gives plenty of time to fit in any patch tests.",
+    waxHoliday: "Ask us how far ahead of your holiday to book your wax.",               // VERIFY: salon's own advice
+    general: "Not sure? We're happy to help you choose when you book.",
+  },
+};
+/* ========================================================================== */
+
+(function init(){
+  const r = document.documentElement.style;
+  r.setProperty("--plum", BRAND.colour); r.setProperty("--blush", BRAND.accent);
+  $("firmName").textContent = BRAND.name; $("demoTag").hidden = !BRAND.demo;
+  reset(); render(false);
+})();
+</script>
+
+<script>
+/* Embedding support: when this tool sits inside another website (an iframe), tell that page how tall it is
+   so the frame can grow to fit. Harmless when opened on its own. */
+(function(){
+  var embedded = false; try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+  if (!embedded) return;
+  document.documentElement.classList.add("embedded");
+  document.documentElement.style.minHeight = "0"; document.body.style.minHeight = "0";
+  var last = 0;
+  function send(){ var b = document.body, cs = getComputedStyle(b), lc = b.lastElementChild, mb = lc ? parseFloat(getComputedStyle(lc).marginBottom) || 0 : 0;
+    var h = Math.ceil(b.getBoundingClientRect().height + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom) + mb);
+    if (Math.abs(h - last) < 2) return; last = h;
+    parent.postMessage({type: "tool-height", height: h}, "*"); }
+  window.addEventListener("load", send);
+  if (window.ResizeObserver) new ResizeObserver(send).observe(document.body); else setInterval(send, 500);
+  send();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Instant Quote Estimator</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: a decorator's job sheet. Room cards stack down the page, each with a paint-swatch edge; a price bar stays pinned to the bottom so the estimate is always in view. Colours come from BRAND settings. */
+:root{
+  --brand:#24466F; --brand-ink:#FFFFFF; --paint:#F2B134; --paint-ink:#2A1E00;
+  --bg:#F3F1EC; --card:#FFFFFF; --ink:#1F2430; --muted:#5E6573; --line:#E2DED5; --soft:#EAF0F7;
+  --display:"Archivo",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);margin:0}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:16px 150px}
+header.top{background:var(--brand);color:var(--brand-ink);border-radius:18px;padding:18px;display:grid;gap:6px;position:relative;overflow:hidden}
+header.top::after{content:"";position:absolute;right:-46px;top:-46px;width:120px;height:120px;border-radius:50%;background:var(--paint);opacity:.9}
+.firm{display:flex;align-items:center;gap:8px;font:600 .82rem var(--body);opacity:.9;position:relative;z-index:1}
+.demo{font:700 .62rem var(--body);letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.2);padding:3px 8px;border-radius:999px}
+header.top h1{font:800 1.7rem/1.05 var(--display);margin:0;letter-spacing:-.01em;position:relative;z-index:1;max-width:16ch;text-wrap:balance}
+header.top p{margin:0;font-size:.9rem;opacity:.9;position:relative;z-index:1;max-width:44ch}
+h2{font:700 1.05rem var(--display);margin:22px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:600 .86rem var(--body);border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:8px 12px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.addrow{display:flex;flex-wrap:wrap;gap:6px}
+.addrow button{font:600 .86rem var(--body);border:1.5px dashed var(--brand);background:transparent;color:var(--brand);border-radius:12px;padding:9px 12px;cursor:pointer}
+.rooms{display:grid;gap:10px}
+.room{background:var(--card);border:1px solid var(--line);border-left:8px solid var(--paint);border-radius:0 14px 14px 0;padding:12px 14px;display:grid;gap:10px}
+.room .hd{display:flex;align-items:center;gap:8px}
+.room .hd b{font:700 1rem var(--display)}
+.room .hd .cost{margin-left:auto;font:600 .9rem var(--body);color:var(--brand);font-variant-numeric:tabular-nums}
+.room .hd button{border:0;background:none;color:var(--muted);font-size:1.2rem;cursor:pointer;line-height:1;padding:2px 6px}
+.sizes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sizes button{font:600 .8rem var(--body);border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 4px;cursor:pointer;color:var(--ink)}
+.sizes button small{display:block;font-weight:400;color:var(--muted);font-size:.7rem}
+.sizes button[aria-pressed="true"]{background:var(--soft);border-color:var(--brand);color:var(--brand)}
+.ticks{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.88rem}
+.ticks label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.ticks input{width:18px;height:18px;accent-color:var(--brand)}
+.doors{display:flex;align-items:center;gap:8px;font-size:.88rem}
+.step{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.step button{border:0;background:#fff;width:32px;height:30px;font-size:1rem;cursor:pointer;color:var(--ink)}
+.step span{min-width:24px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
+.opts{display:grid;gap:14px}
+.opts .lab{font-weight:600;font-size:.9rem;margin-bottom:6px;display:block}
+.sumcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:10px;margin-top:22px}
+.sumcard h2{margin:0}
+.range{font:800 2rem/1 var(--display);color:var(--brand);font-variant-numeric:tabular-nums}
+.meta{color:var(--muted);font-size:.88rem}
+.break{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.88rem;font-variant-numeric:tabular-nums;margin:0}
+.break dt{color:var(--muted)} .break dd{margin:0;text-align:right;font-weight:600}
+.cta{display:block;text-align:center;text-decoration:none;background:var(--paint);color:var(--paint-ink);font:800 1.05rem var(--display);padding:14px;border-radius:12px;border:0;cursor:pointer;width:100%}
+.ghost{display:block;width:100%;text-align:center;background:#fff;color:var(--brand);border:1.5px solid var(--brand);font:600 .95rem var(--body);padding:11px;border-radius:12px;cursor:pointer}
+.small{font-size:.74rem;color:var(--muted);line-height:1.45}
+.ph{background:#FFF6DD;border:1px dashed #E3C77A;border-radius:6px;padding:4px 6px;color:#6B5413}
+textarea.copy{width:100%;box-sizing:border-box;min-height:120px;font:.8rem ui-monospace,monospace;border:1px solid var(--line);border-radius:8px;padding:8px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--brand);color:var(--brand-ink);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.15);z-index:5}
+.bar .in{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.bar .lbl{font-size:.72rem;opacity:.85;text-transform:uppercase;letter-spacing:.06em}
+.bar .val{font:800 1.3rem var(--display);font-variant-numeric:tabular-nums}
+.bar a{margin-left:auto;background:var(--paint);color:var(--paint-ink);text-decoration:none;font:800 .92rem var(--display);padding:10px 14px;border-radius:10px;white-space:nowrap}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--paint);outline-offset:2px}
+.empty{background:var(--card);border:1.5px dashed var(--line);border-radius:14px;padding:16px;color:var(--muted);text-align:center;font-size:.9rem}
+.embedded .bar{display:none}
+.embedded .wrap{padding-bottom:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="firm"><span id="firmName">Example Decorating Co.</span><span class="demo" id="demoTag">Demo</span></div>
+    <h1>Get a price for your decorating in 60 seconds</h1>
+    <p>Add your rooms, tick what needs doing, and see an instant price range. No sign-up needed.</p>
+  </header>
+
+  <h2>1. Add your rooms</h2>
+  <div class="addrow" id="addRow"></div>
+  <div class="rooms" id="rooms" aria-live="polite"></div>
+
+  <h2>2. A few details</h2>
+  <div class="opts">
+    <div><span class="lab" id="condLab">What condition are the walls in?</span>
+      <div class="chips" id="cond" role="group" aria-labelledby="condLab">
+        <button type="button" data-v="good">Good</button><button type="button" data-v="fair">A few cracks and marks</button><button type="button" data-v="poor">Needs lots of filling</button>
+      </div></div>
+    <div><span class="lab" id="finLab">Paint quality</span>
+      <div class="chips" id="fin" role="group" aria-labelledby="finLab">
+        <button type="button" data-v="std">Standard</button><button type="button" data-v="prem">Premium (more durable)</button>
+      </div></div>
+    <div><span class="lab" id="furnLab">Will rooms be empty?</span>
+      <div class="chips" id="furn" role="group" aria-labelledby="furnLab">
+        <button type="button" data-v="0">Yes, cleared</button><button type="button" data-v="1">No, furniture to move and cover</button>
+      </div></div>
+  </div>
+
+  <section class="sumcard" aria-live="polite">
+    <h2>Your estimate</h2>
+    <div class="range" id="range">£0</div>
+    <div class="meta" id="meta"></div>
+    <dl class="break" id="break"></dl>
+    <a class="cta" id="cta" href="#" target="_blank" rel="noopener">Book a free survey for a fixed price</a>
+    <button class="ghost" id="copyBtn" type="button">Copy my job details</button>
+    <textarea class="copy" id="copyBox" readonly hidden aria-label="Job details to copy"></textarea>
+    <p class="small" id="notes"></p>
+    <p class="small" id="phone"></p>
+  </section>
+</div>
+
+<div class="bar" aria-hidden="true"><div class="in">
+  <div><div class="lbl">Estimate</div><div class="val" id="barVal">£0</div></div>
+  <a id="barCta" href="#" target="_blank" rel="noopener">Book survey</a>
+</div></div>
+
+<script>
+/* ============ BRAND & PRICE SETTINGS: each business edits these ============ */
+const BRAND = {
+  name: "Example Decorating Co.",          // invented demo business
+  demo: true,
+  colour: "#24466F", accent: "#F2B134",
+  bookingUrl: "https://example.com/book-survey",
+  phone: "01234 567890",                   // placeholder
+  vatNote: "Prices include labour and paint. Not VAT registered.",
+};
+const PRICES = {                           // demo prices only, the business sets its own
+  wallsPerM2: 8,          // two coats, per square metre of wall
+  ceilingPerM2: 9,
+  skirtingPerMetre: 5,
+  doorEach: 65,           // both sides plus frame
+  wallpaperRemovalPerM2: 6,
+  condition: {good: 1, fair: 1.15, poor: 1.35},
+  premiumPaint: 1.12,
+  furnitureSurcharge: 0.08,               // 8% extra if rooms aren't cleared
+  stairwellHeightFactor: 1.6,             // tall walls and access equipment
+  minimumJob: 180,
+  rangeLow: 0.9, rangeHigh: 1.15,          // show a range, not a fixed price
+  m2PerDay: 28                             // rough output for estimating days
+};
+/* ========================================================================== */
+
+const ROOM_TYPES = {
+  bed:  {label:"Bedroom",       sizes:{S:[2.6,2.4],M:[3.4,3.0],L:[4.2,3.6]}, h:2.4, doors:1},
+  live: {label:"Living room",   sizes:{S:[3.6,3.2],M:[4.6,3.8],L:[5.8,4.4]}, h:2.4, doors:1},
+  kit:  {label:"Kitchen",       sizes:{S:[2.8,2.4],M:[3.6,3.0],L:[4.6,3.8]}, h:2.4, doors:1, wallShare:0.55},
+  bath: {label:"Bathroom",      sizes:{S:[2.0,1.7],M:[2.6,2.1],L:[3.2,2.6]}, h:2.4, doors:1, wallShare:0.6},
+  hall: {label:"Hall, stairs & landing", sizes:{S:[3.5,1.0],M:[4.5,1.1],L:[6.0,1.3]}, h:2.4, doors:3, stair:true},
+};
+const SIZE_NAME = {S:"Small", M:"Medium", L:"Large"};
+const $ = id => document.getElementById(id);
+const gbp = v => "£" + (Math.round(v / 10) * 10).toLocaleString("en-GB");
+const r = document.documentElement.style;
+r.setProperty("--brand", BRAND.colour); r.setProperty("--paint", BRAND.accent);
+$("firmName").textContent = BRAND.name; $("demoTag").hidden = !BRAND.demo;
+$("cta").href = $("barCta").href = BRAND.bookingUrl;
+
+let uid = 0;
+const state = {rooms:[], cond:"fair", fin:"std", furn:"1"};
+function addRoom(type){
+  const t = ROOM_TYPES[type];
+  state.rooms.push({id:++uid, type, size:"M", walls:true, ceiling:true, wood:true, paper:false, doors:t.doors});
+  render();
+}
+$("addRow").innerHTML = Object.entries(ROOM_TYPES).map(([k, t]) => `<button type="button" data-add="${k}">+ ${t.label}</button>`).join("");
+$("addRow").onclick = e => { const b = e.target.closest("button"); if (b) addRoom(b.dataset.add); };
+
+// Area maths for one room, using typical sizes for Small / Medium / Large.
+function roomCost(rm){
+  const t = ROOM_TYPES[rm.type], [L, W] = t.sizes[rm.size], P = PRICES;
+  const hFactor = t.stair ? P.stairwellHeightFactor : 1;
+  const wallArea = 2 * (L + W) * t.h * hFactor * 0.88 * (t.wallShare || 1);   // ~12% off for doors and windows
+  const ceilArea = L * W * (t.stair ? 1.3 : 1);
+  let cost = 0, area = 0;
+  const parts = [];
+  if (rm.walls){ const c = wallArea * P.wallsPerM2; cost += c; area += wallArea; parts.push(["Walls", c]); }
+  if (rm.ceiling){ const c = ceilArea * P.ceilingPerM2; cost += c; area += ceilArea; parts.push(["Ceiling", c]); }
+  if (rm.wood){ const c = 2 * (L + W) * P.skirtingPerMetre * (t.wallShare ? 0.6 : 1) + rm.doors * P.doorEach; cost += c; area += rm.doors * 3; parts.push(["Woodwork", c]); }
+  if (rm.paper){ const c = wallArea * P.wallpaperRemovalPerM2; cost += c; area += wallArea * 0.5; parts.push(["Wallpaper removal", c]); }
+  cost *= P.condition[state.cond] * (state.fin === "prem" ? P.premiumPaint : 1) * (state.furn === "1" ? 1 + P.furnitureSurcharge : 1);
+  return {cost, area, parts};
+}
+
+function render(){
+  const box = $("rooms");
+  if (!state.rooms.length){
+    box.innerHTML = `<div class="empty">Tap a room above to add it. You can add as many as you like.</div>`;
+  } else {
+    box.innerHTML = state.rooms.map(rm => {
+      const t = ROOM_TYPES[rm.type], c = roomCost(rm);
+      const sizes = Object.keys(t.sizes).map(s => { const [L, W] = t.sizes[s];
+        return `<button type="button" data-act="size" data-v="${s}" aria-pressed="${rm.size === s}">${SIZE_NAME[s]}<small>about ${L}×${W}m</small></button>`; }).join("");
+      const tick = (k, lbl) => `<label><input type="checkbox" data-act="tick" data-k="${k}" ${rm[k] ? "checked" : ""}> ${lbl}</label>`;
+      return `<div class="room" data-id="${rm.id}">
+        <div class="hd"><b>${t.label}</b><span class="cost">${gbp(c.cost)}</span><button type="button" data-act="del" aria-label="Remove ${t.label}">×</button></div>
+        <div class="sizes" role="group" aria-label="Room size">${sizes}</div>
+        <div class="ticks">${tick("walls","Walls")}${tick("ceiling","Ceiling")}${tick("wood","Woodwork & doors")}${tick("paper","Strip wallpaper")}</div>
+        ${rm.wood ? `<div class="doors">Doors to paint <span class="step"><button type="button" data-act="door" data-v="-1" aria-label="Fewer doors">−</button><span>${rm.doors}</span><button type="button" data-act="door" data-v="1" aria-label="More doors">+</button></span></div>` : ""}
+      </div>`;
+    }).join("");
+  }
+  [["cond","cond"],["fin","fin"],["furn","furn"]].forEach(([id, k]) =>
+    $(id).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === state[k])));
+
+  let total = 0, area = 0;
+  const lines = state.rooms.map(rm => { const c = roomCost(rm); total += c.cost; area += c.area; return [ROOM_TYPES[rm.type].label + " (" + SIZE_NAME[rm.size].toLowerCase() + ")", c.cost]; });
+  if (state.rooms.length && total < PRICES.minimumJob){ lines.push(["Minimum job charge applies", PRICES.minimumJob - total]); total = PRICES.minimumJob; }
+  const lo = total * PRICES.rangeLow, hi = total * PRICES.rangeHigh;
+  const days = Math.max(0.5, Math.ceil(area / PRICES.m2PerDay * 2) / 2);
+  const txt = state.rooms.length ? `${gbp(lo)} – ${gbp(hi)}` : "Add a room";
+  $("range").textContent = txt; $("barVal").textContent = state.rooms.length ? txt : "£0";
+  $("meta").textContent = state.rooms.length ? `About ${days} working day${days === 1 ? "" : "s"} for one decorator · ${state.rooms.length} room${state.rooms.length === 1 ? "" : "s"}` : "Your price range appears here as you add rooms.";
+  $("break").innerHTML = lines.map(([k, v]) => `<dt>${k}</dt><dd>${gbp(v)}</dd>`).join("");
+  $("notes").innerHTML = `This is an estimate based on typical room sizes, not a quote. Your fixed price is confirmed after a free survey. ${BRAND.vatNote} ${BRAND.demo ? '<span class="ph">Demo prices: each business sets its own.</span>' : ""}`;
+  $("phone").textContent = `Prefer to talk? Call ${BRAND.phone}`;
+
+  SUMMARY = `Decorating enquiry for ${BRAND.name}\n` +
+    state.rooms.map(rm => { const t = ROOM_TYPES[rm.type];
+      const w = [rm.walls && "walls", rm.ceiling && "ceiling", rm.wood && `woodwork (${rm.doors} door${rm.doors === 1 ? "" : "s"})`, rm.paper && "strip wallpaper"].filter(Boolean).join(", ");
+      return `- ${t.label}, ${SIZE_NAME[rm.size].toLowerCase()}: ${w || "nothing ticked"}`; }).join("\n") +
+    `\nWall condition: ${$("cond").querySelector('[aria-pressed="true"]').textContent}` +
+    `\nPaint: ${$("fin").querySelector('[aria-pressed="true"]').textContent}` +
+    `\nRooms: ${$("furn").querySelector('[aria-pressed="true"]').textContent}` +
+    `\nEstimate shown: ${txt}`;
+}
+let SUMMARY = "";
+
+$("rooms").addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const rm = state.rooms.find(x => x.id === +el.closest(".room").dataset.id);
+  if (el.dataset.act === "del") state.rooms = state.rooms.filter(x => x !== rm);
+  if (el.dataset.act === "size") rm.size = el.dataset.v;
+  if (el.dataset.act === "door") rm.doors = Math.max(0, Math.min(12, rm.doors + +el.dataset.v));
+  if (el.dataset.act !== "tick") render();
+});
+$("rooms").addEventListener("change", e => {
+  const el = e.target.closest('[data-act="tick"]'); if (!el) return;
+  const rm = state.rooms.find(x => x.id === +el.closest(".room").dataset.id);
+  rm[el.dataset.k] = el.checked; render();
+});
+[["cond","cond"],["fin","fin"],["furn","furn"]].forEach(([id, k]) =>
+  $(id).onclick = e => { const b = e.target.closest("button"); if (b){ state[k] = b.dataset.v; render(); } });
+$("copyBtn").onclick = async () => {
+  const b = $("copyBtn");
+  try { await navigator.clipboard.writeText(SUMMARY); b.textContent = "Copied. Paste it into your booking message"; $("copyBox").hidden = true; }
+  catch { const t = $("copyBox"); t.value = SUMMARY; t.hidden = false; t.select(); b.textContent = "Select and copy the text below"; }
+  setTimeout(() => b.textContent = "Copy my job details", 3000);
+};
+
+// Start with a realistic example so the estimate isn't empty.
+state.rooms.push({id:++uid, type:"live", size:"M", walls:true, ceiling:true, wood:true, paper:false, doors:1});
+state.rooms.push({id:++uid, type:"bed", size:"M", walls:true, ceiling:true, wood:false, paper:false, doors:1});
+render();
+</script>
+
+<script>
+/* Embedding support: when this tool sits inside another website (an iframe), tell that page how tall it is
+   so the frame can grow to fit. Works with the embed code in the README; harmless when opened on its own. */
+(function(){
+  var embedded = false; try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+  if (!embedded) return;
+  document.documentElement.classList.add("embedded");
+  document.documentElement.style.minHeight = "0"; document.body.style.minHeight = "0";
+  var last = 0;
+  function send(){
+    var b = document.body, cs = getComputedStyle(b), lc = b.lastElementChild, mb = lc ? parseFloat(getComputedStyle(lc).marginBottom) || 0 : 0;
+    var h = Math.ceil(b.getBoundingClientRect().height + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom) + mb);
+    if (Math.abs(h - last) < 2) return; last = h;
+    parent.postMessage({type: "tool-height", height: h}, "*");
+  }
+  window.addEventListener("load", send);
+  if (window.ResizeObserver) new ResizeObserver(send).observe(document.body); else setInterval(send, 500);
+  send();
+})();
+</script>
+</body>
+</html>

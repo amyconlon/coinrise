@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moving Cost &amp; Van Size Calculator</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a removals loading sheet. Bold condensed headings, a deep green "livery" header with a hazard-stripe
+   edge, rooms of items as fold-out lists, and a drawn van that fills with boxes as the volume grows.
+   Colours come from BRAND settings via CSS custom properties. */
+:root{
+  --brand:#143D2E; --brand-ink:#FFFFFF; --accent:#FF8C1A; --accent-ink:#231300;
+  --bg:#F2F1EC; --card:#FFFFFF; --ink:#18221D; --muted:#56635C; --line:#DCDDD5; --soft:#E7EFEA;
+  --box:#C9995C; --box-edge:#8E6532;
+  --display:"Barlow Condensed",system-ui,sans-serif; --body:"Barlow",system-ui,sans-serif;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);margin:0}
+.wrap{max-width:680px;margin:0 auto;padding-inline:16px;padding-block:16px 140px}
+
+/* Header */
+header.top{background:var(--brand);color:var(--brand-ink);border-radius:16px 16px 6px 6px;padding:18px 18px 26px;display:grid;gap:6px;position:relative;overflow:hidden}
+header.top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:9px;
+  background:repeating-linear-gradient(-45deg,var(--accent) 0 12px,var(--brand) 12px 24px)}
+.firm{display:flex;align-items:center;gap:8px;font:700 .82rem var(--body);letter-spacing:.04em;text-transform:uppercase;opacity:.92}
+.firm svg{flex:none}
+.demo{font:700 .62rem var(--body);letter-spacing:.12em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:3px 8px;border-radius:999px}
+header.top h1{font:800 2.05rem/1 var(--display);margin:2px 0 0;letter-spacing:.005em;text-transform:uppercase;max-width:18ch;text-wrap:balance}
+header.top p{margin:0;font-size:.95rem;opacity:.9;max-width:46ch}
+
+/* Section headings */
+h2{font:800 1.35rem/1.1 var(--display);text-transform:uppercase;letter-spacing:.01em;margin:26px 0 4px;display:flex;align-items:center;gap:10px}
+h2 .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:7px;background:var(--brand);color:var(--brand-ink);font-size:1rem;flex:none}
+.hint{margin:0 0 10px;color:var(--muted);font-size:.92rem}
+
+/* Chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{font:600 .95rem var(--body);border:1.5px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:9px 14px;min-height:44px;cursor:pointer}
+.chips button:hover{border-color:var(--brand)}
+.chips button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.chips.size button{display:grid;text-align:left;line-height:1.15;padding:8px 14px}
+.chips.size button small{font-weight:500;font-size:.75rem;opacity:.75}
+
+/* Rooms */
+.rooms{display:grid;gap:8px}
+details.room{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+details.room summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:52px}
+details.room summary::-webkit-details-marker{display:none}
+details.room summary b{font:700 1.15rem var(--display);text-transform:uppercase;letter-spacing:.01em}
+details.room summary .cnt{margin-left:auto;white-space:nowrap;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+details.room summary .cnt strong{color:var(--ink);font-weight:600}
+details.room summary .chev{flex:none;width:22px;height:22px;border-radius:6px;background:var(--soft);display:grid;place-items:center;transition:transform .2s}
+details.room[open] summary .chev{transform:rotate(180deg)}
+details.room[open] summary{border-bottom:1px solid var(--line)}
+.items{display:grid;padding:4px 14px 8px}
+.item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.item:last-child{border-bottom:0}
+.item .nm{flex:1;min-width:0;font-size:.95rem;line-height:1.25}
+.item .nm small{display:block;color:var(--muted);font-size:.76rem}
+.item.has .nm{font-weight:600}
+.step{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;flex:none;background:#fff}
+.step button{border:0;background:#fff;width:44px;height:44px;font:600 1.25rem var(--body);cursor:pointer;color:var(--brand)}
+.step button:hover{background:var(--soft)}
+.step button:disabled{color:#B9BDB6;cursor:default;background:#fff}
+.step output{min-width:30px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* Move details */
+.opts{display:grid;gap:18px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 14px}
+.lab{font-weight:600;font-size:.95rem;margin-bottom:6px;display:block}
+.dist{display:flex;align-items:center;gap:12px}
+.dist input[type=range]{flex:1;min-width:0;accent-color:var(--brand);height:44px}
+.dist .num{display:flex;align-items:center;gap:6px;flex:none;font-size:.9rem;color:var(--muted)}
+.dist input[type=number]{width:74px;height:44px;border:1.5px solid var(--line);border-radius:10px;font:700 1rem var(--body);text-align:center;color:var(--ink)}
+.floors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.floors > div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;gap:6px;justify-items:start}
+.floors .lab{margin:0;font-size:.88rem}
+
+/* Result */
+.sumcard{background:var(--card);border:1px solid var(--line);border-top:6px solid var(--accent);border-radius:14px;padding:16px;display:grid;gap:12px;margin-top:26px}
+.sumcard h2{margin:0}
+.vanbox{background:linear-gradient(#EEF3F0,#EEF3F0 82%,#E1E4DD 82%);border-radius:10px;padding:8px 4px 2px}
+.vanbox svg{display:block;width:100%;height:auto}
+.load-cover{transition:transform .5s ease}
+.vehrow{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 14px}
+.veh{font:800 1.6rem/1.05 var(--display);text-transform:uppercase;color:var(--brand)}
+.vol{font:700 1rem var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
+.cap{display:grid;gap:4px}
+.cap .track{height:12px;background:#E6E7E0;border-radius:999px;overflow:hidden}
+.cap .fillbar{height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .5s ease}
+.cap .capt{font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px;font-variant-numeric:tabular-nums}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.stat{background:var(--soft);border-radius:10px;padding:8px 12px;flex:1 1 auto}
+.stat .k{white-space:nowrap;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.stat .v{font:800 1.35rem/1.1 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pricebox{border-top:1px solid var(--line);padding-top:12px}
+.pricebox .k{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.range{font:800 2.5rem/1 var(--display);color:var(--brand);font-variant-numeric:tabular-nums}
+.meta{color:var(--muted);font-size:.9rem}
+.note{background:#FFF3E3;border-left:4px solid var(--accent);border-radius:6px;padding:8px 10px;font-size:.88rem}
+.break{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;font-size:.9rem;font-variant-numeric:tabular-nums;margin:0}
+.break dt{color:var(--muted)} .break dd{margin:0;text-align:right;font-weight:600}
+.break .tot{border-top:1px solid var(--line);padding-top:6px;color:var(--ink);font-weight:700}
+.cta{display:block;text-align:center;text-decoration:none;background:var(--accent);color:var(--accent-ink);font:800 1.25rem var(--display);text-transform:uppercase;letter-spacing:.02em;padding:13px;border-radius:12px;border:0;cursor:pointer;width:100%;min-height:48px}
+.cta:hover{filter:brightness(1.05)}
+.ghost{display:block;width:100%;text-align:center;background:#fff;color:var(--brand);border:1.5px solid var(--brand);font:700 .98rem var(--body);padding:11px;border-radius:12px;cursor:pointer;min-height:46px}
+.small{font-size:.78rem;color:var(--muted);line-height:1.45;margin:0}
+.ph{background:#FFF6DD;border:1px dashed #E3C77A;border-radius:6px;padding:1px 6px;color:#6B5413}
+textarea.copy{width:100%;min-height:140px;font:.8rem ui-monospace,monospace;border:1px solid var(--line);border-radius:8px;padding:8px}
+
+/* Sticky bar (phone/standalone only) */
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--brand);color:var(--brand-ink);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.18);z-index:5;border-top:4px solid var(--accent)}
+.bar .in{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.bar .txt{min-width:0}
+.bar .lbl{font-size:.74rem;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .val{font:800 1.45rem/1.05 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar a{margin-left:auto;flex:none;background:var(--accent);color:var(--accent-ink);text-decoration:none;font:800 1.05rem var(--display);text-transform:uppercase;padding:11px 14px;border-radius:10px;white-space:nowrap;min-height:44px;display:flex;align-items:center}
+
+button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.embedded .bar{display:none}
+.embedded .wrap{padding-bottom:20px}
+@media (min-width:560px){
+  header.top{padding:24px 24px 30px}
+  header.top h1{font-size:2.6rem}
+}
+@media (max-width:360px){
+  .chips button{padding:8px 11px;font-size:.9rem}
+  .range{font-size:2.15rem}
+  .bar .val{font-size:1.25rem}
+  details.room summary .cf{display:none}
+  details.room summary b{font-size:1.05rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="firm">
+      <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><rect x="1" y="2" width="12" height="10" rx="1.5" fill="currentColor"/><path d="M14 5h4l3 4v3h-7z" fill="currentColor"/><circle cx="5" cy="13.5" r="2" fill="var(--accent)"/><circle cx="17" cy="13.5" r="2" fill="var(--accent)"/></svg>
+      <span id="firmName">Example Removals</span><span class="demo" id="demoTag">Demo</span>
+    </div>
+    <h1>How big a van do you need?</h1>
+    <p>Pick your home size, tweak the items, and see the van, crew and a price range. It updates as you go.</p>
+  </header>
+
+  <h2><span class="n">1</span>Quick start</h2>
+  <p class="hint">How big is the home you're moving from? We'll fill in a typical list of items.</p>
+  <div class="chips size" id="presets" role="group" aria-label="Property size"></div>
+
+  <h2><span class="n">2</span>Fine-tune your items</h2>
+  <p class="hint">Open a room to add or remove things. Every item counts towards the van size.</p>
+  <div class="rooms" id="rooms"></div>
+
+  <h2><span class="n">3</span>Move details</h2>
+  <div class="opts">
+    <div>
+      <label class="lab" for="milesR">How far are you moving? <span id="milesTxt"></span></label>
+      <div class="dist">
+        <input type="range" id="milesR" min="0" max="300" step="1" aria-label="Distance in miles">
+        <span class="num"><input type="number" id="milesN" min="0" max="300" step="1" inputmode="numeric" aria-label="Distance in miles, typed"> miles</span>
+      </div>
+    </div>
+    <div>
+      <span class="lab">Flights of stairs with no lift</span>
+      <div class="floors">
+        <div><span class="lab" id="ffLab">Old address</span>
+          <span class="step" role="group" aria-labelledby="ffLab"><button type="button" data-fl="from" data-v="-1" aria-label="Fewer floors at old address">−</button><output id="ffOut">0</output><button type="button" data-fl="from" data-v="1" aria-label="More floors at old address">+</button></span></div>
+        <div><span class="lab" id="ftLab">New address</span>
+          <span class="step" role="group" aria-labelledby="ftLab"><button type="button" data-fl="to" data-v="-1" aria-label="Fewer floors at new address">−</button><output id="ftOut">0</output><button type="button" data-fl="to" data-v="1" aria-label="More floors at new address">+</button></span></div>
+      </div>
+    </div>
+    <div><span class="lab" id="walkLab">Long walk from where the van parks? (more than about 20 metres)</span>
+      <div class="chips" data-k="walk" role="group" aria-labelledby="walkLab">
+        <button type="button" data-v="no">No</button><button type="button" data-v="yes">Yes</button>
+      </div></div>
+    <div><span class="lab" id="packLab">Would you like us to pack?</span>
+      <div class="chips" data-k="packing" role="group" aria-labelledby="packLab">
+        <button type="button" data-v="none">No, I'll pack</button><button type="button" data-v="fragiles">Fragiles only</button><button type="button" data-v="full">Full packing</button>
+      </div></div>
+    <div><span class="lab" id="disLab">Take apart and rebuild furniture? (beds, wardrobes, tables)</span>
+      <div class="chips" data-k="dismantle" role="group" aria-labelledby="disLab">
+        <button type="button" data-v="no">No</button><button type="button" data-v="yes">Yes please</button>
+      </div></div>
+    <div><span class="lab" id="dayLab">Moving day</span>
+      <div class="chips" data-k="day" role="group" aria-labelledby="dayLab">
+        <button type="button" data-v="weekday">Monday to Thursday</button><button type="button" data-v="peak">Friday or weekend</button>
+      </div></div>
+  </div>
+
+  <section class="sumcard" aria-labelledby="resHead">
+    <h2 id="resHead">Your move</h2>
+    <div class="vanbox" id="vanBox" aria-hidden="true"></div>
+    <div aria-live="polite" style="display:grid;gap:12px">
+      <div class="vehrow"><div class="veh" id="vehName"></div><div class="vol" id="volTxt"></div></div>
+      <div class="cap">
+        <div class="track" role="progressbar" id="capBar" aria-label="How full the vehicle is" aria-valuemin="0" aria-valuemax="100"><div class="fillbar" id="capFill"></div></div>
+        <div class="capt"><span id="capTxt"></span><span id="capMax"></span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">Crew</div><div class="v" id="crewTxt"></div></div>
+        <div class="stat"><div class="k">Time, about</div><div class="v" id="hrsTxt"></div></div>
+        <div class="stat"><div class="k">Items</div><div class="v" id="itemsTxt"></div></div>
+      </div>
+      <div class="note" id="note" hidden></div>
+      <div class="pricebox"><div class="k">Estimated price</div><div class="range" id="range"></div><div class="meta" id="meta"></div></div>
+    </div>
+    <div>
+      <div class="lab">How we worked this out</div>
+      <dl class="break" id="break"></dl>
+    </div>
+    <a class="cta" id="cta" href="#" target="_blank" rel="noopener"></a>
+    <button class="ghost" id="copyBtn" type="button">Copy my details</button>
+    <textarea class="copy" id="copyBox" readonly hidden aria-label="Your move details to copy"></textarea>
+    <p class="small" id="notes"></p>
+    <p class="small" id="phone"></p>
+  </section>
+</div>
+
+<div class="bar" aria-hidden="true"><div class="in">
+  <div class="txt"><div class="lbl" id="barLbl">Estimate</div><div class="val" id="barVal"></div></div>
+  <a id="barCta" href="#" target="_blank" rel="noopener" tabindex="-1">Book survey</a>
+</div></div>
+
+<script>
+/* ---------- App code. All prices and lists live in the settings block further down. ---------- */
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString("en-GB");
+const gbp = v => "£" + (Math.round(v / 10) * 10).toLocaleString("en-GB");
+const plural = (n, w, p) => n + " " + (n === 1 ? w : (p || w + "s"));
+const state = {counts:{}, preset:"", tuned:false, miles:0, floorsFrom:0, floorsTo:0, walk:"no", packing:"none", dismantle:"no", day:"weekday"};
+const openRooms = new Set();
+let SUMMARY = "", vanKey = "";
+
+function applyPreset(key){
+  state.counts = {};
+  ITEMS.forEach(it => state.counts[it.id] = PRESETS[key].items[it.id] || 0);
+  state.preset = key; state.tuned = false;
+}
+
+/* ---------- The van drawing: a cut-away side view that fills with boxes ---------- */
+const SHAPES = {   // drawing sizes only (not prices): cargo length/height, cab width/height, wheel radius
+  small: {L:130, H:62,  C:60, cabH:62, r:13, gap:0, peak:false},
+  lwb:   {L:185, H:70,  C:62, cabH:68, r:13, gap:0, peak:false},
+  luton: {L:205, H:98,  C:62, cabH:70, r:15, gap:1, peak:true},
+  lorry: {L:252, H:112, C:72, cabH:86, r:17, gap:5, peak:false},
+};
+function vanSVG(units){
+  const GY = 170, GAP = 26;
+  const widths = units.map(u => SHAPES[u].L + SHAPES[u].gap + SHAPES[u].C);
+  const VW = Math.max(440, widths.reduce((a, b) => a + b, 0) + GAP * (units.length - 1) + 40);
+  let x = (VW - widths.reduce((a, b) => a + b, 0) - GAP * (units.length - 1)) / 2;
+  let defs = "", body = "";
+  units.forEach((u, i) => {
+    const s = SHAPES[u], bot = GY - s.r - 3, top = bot - s.H, cx = x + s.L + s.gap, ct = bot - s.cabH;
+    const ix = x + 6, iy = top + 6, iw = s.L - 12, ih = s.H - 12;
+    defs += `<pattern id="bx${i}" patternUnits="userSpaceOnUse" x="${ix}" y="${iy + ih}" width="24" height="19">
+      <rect x="1" y="1" width="22" height="17" rx="1.5" fill="var(--box)" stroke="var(--box-edge)" stroke-width="1.2"/>
+      <path d="M12 1v7" stroke="#E8D3A8" stroke-width="3"/></pattern>
+      <clipPath id="cl${i}"><rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="3"/></clipPath>`;
+    // cargo box shell + accent stripe
+    body += `<rect x="${x}" y="${top}" width="${s.L}" height="${s.H}" rx="6" fill="#fff" stroke="var(--ink)" stroke-width="2.5"/>`;
+    body += `<g clip-path="url(#cl${i})"><rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" fill="url(#bx${i})"/>
+      <rect class="load-cover" x="${ix}" y="${iy}" width="${iw}" height="${ih}" fill="#F7F7F3" style="transform-box:fill-box;transform-origin:0 50%"/></g>`;
+    body += `<rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="3" fill="none" stroke="#B9C2BC" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+    body += `<rect x="${x}" y="${bot - 7}" width="${s.L}" height="7" fill="var(--brand)"/>`;
+    // cab
+    const C = s.C;
+    body += `<path d="M${cx} ${bot} V${ct + 4} Q${cx} ${ct} ${cx + 4} ${ct} H${cx + C * .48} L${cx + C - 3} ${ct + s.cabH * .5} Q${cx + C} ${ct + s.cabH * .54} ${cx + C} ${ct + s.cabH * .6} V${bot} Z" fill="var(--brand)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>`;
+    body += `<path d="M${cx + C * .3} ${ct + 7} H${cx + C * .46} L${cx + C - 9} ${ct + s.cabH * .46} H${cx + C * .3} Z" fill="#CFE3EE" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round"/>`;
+    body += `<rect x="${cx + C - 7}" y="${bot - 16}" width="7" height="6" rx="1.5" fill="var(--accent)"/>`;
+    if (s.peak) body += `<path d="M${cx - 2} ${top} H${cx + C * .38} Q${cx + C * .44} ${top} ${cx + C * .44} ${top + 8} V${ct} H${cx - 2} Z" fill="#fff" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>`;
+    // wheels
+    const wheels = u === "lorry" ? [x + s.L * .66, x + s.L * .66 + 2 * s.r + 4, cx + C * .5] : [x + s.L * .24, cx + C * .48];
+    if (u === "lorry") wheels.splice(1, 1);
+    wheels.forEach(wx => body += `<circle cx="${wx}" cy="${GY - s.r}" r="${s.r}" fill="#20262A"/><circle cx="${wx}" cy="${GY - s.r}" r="${s.r * .42}" fill="#C9CFCB"/>`);
+    x += widths[i] + GAP;
+  });
+  return `<svg viewBox="0 0 ${VW} 180" role="img"><defs>${defs}</defs>
+    <line x1="0" y1="${GY + 1}" x2="${VW}" y2="${GY + 1}" stroke="#AEB6AF" stroke-width="2" stroke-dasharray="14 10"/>${body}</svg>`;
+}
+
+/* ---------- Building the page ---------- */
+function buildPresets(){
+  $("presets").innerHTML = Object.entries(PRESETS).map(([k, p]) =>
+    `<button type="button" data-p="${k}">${p.label}<small>${p.sub}</small></button>`).join("");
+  $("presets").onclick = e => { const b = e.target.closest("button"); if (b){ applyPreset(b.dataset.p); buildRooms(); render(); } };
+}
+function buildRooms(){
+  $("rooms").innerHTML = ROOMS.map(rm => {
+    const rows = ITEMS.filter(it => it.room === rm.id).map(it =>
+      `<div class="item" data-row="${it.id}"><div class="nm">${it.name}<small>about ${it.cuft} cu ft each</small></div>
+        <span class="step" role="group" aria-label="${it.name}">
+          <button type="button" data-it="${it.id}" data-v="-1" aria-label="Remove one ${it.name}">−</button><output id="c_${it.id}">0</output><button type="button" data-it="${it.id}" data-v="1" aria-label="Add one ${it.name}">+</button>
+        </span></div>`).join("");
+    return `<details class="room" data-room="${rm.id}" ${openRooms.has(rm.id) ? "open" : ""}>
+      <summary><b>${rm.label}</b><span class="cnt" id="rc_${rm.id}"></span><span class="chev" aria-hidden="true"><svg width="12" height="8" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></span></summary>
+      <div class="items">${rows}</div></details>`;
+  }).join("");
+}
+
+/* ---------- The sums ---------- */
+function calc(){
+  const P = PRICES;
+  let vol = 0, n = 0, nDis = 0;
+  ITEMS.forEach(it => { const c = state.counts[it.id] || 0; vol += c * it.cuft; n += c; if (it.dismantle) nDis += c; });
+  // Vehicle: the first one the load fits into, leaving some room for awkward shapes.
+  let veh = VEHICLES.find(v => vol <= v.capacityCuFt * P.fillTarget);
+  const over = !veh; if (over) veh = VEHICLES[VEHICLES.length - 1];
+  const crew = (P.crewBands.find(b => vol <= b.upToCuFt) || P.crewBands[P.crewBands.length - 1]).movers;
+  const walkF = state.walk === "yes" ? P.longWalkFactor : 1;
+  const perHour = P.loadCuFtPerMoverHour * crew;
+  const loadH = vol / perHour * (1 + P.stairsPctPerFloor * state.floorsFrom) * walkF;
+  const unloadH = vol / perHour * P.unloadSpeedFactor * (1 + P.stairsPctPerFloor * state.floorsTo) * walkF;
+  const disH = state.dismantle === "yes" ? nDis * P.dismantleHoursPerItem / crew : 0;
+  const travelH = P.baseTravelHours + state.miles / P.avgSpeedMph * P.returnTripFactor;
+  const hours = Math.max(P.minHours, Math.ceil((loadH + unloadH + disH + travelH) * 2) / 2);
+  const lines = [];
+  const labour = hours * crew * P.moverHourly;
+  lines.push([`${plural(crew, "mover")} × ${hours} hrs × £${P.moverHourly}/hr`, labour]);
+  lines.push([`${veh.name} (day hire, fuel included)`, veh.dayRate]);
+  const extraMiles = Math.max(0, state.miles - P.freeMiles);
+  if (extraMiles > 0) lines.push([`Mileage: ${fmt(extraMiles)} miles beyond the first ${P.freeMiles} × £${P.perMile.toFixed(2)}`, extraMiles * P.perMile]);
+  if (state.packing !== "none"){
+    const pk = P.packing[state.packing];
+    lines.push([`${pk.label} (materials included)`, Math.max(pk.minimum, vol * pk.perCuFt)]);
+  }
+  if (state.dismantle === "yes" && nDis > 0) lines.push([`Take apart and rebuild: ${plural(nDis, "item")} × £${P.dismantlePerItem}`, nDis * P.dismantlePerItem]);
+  let total = lines.reduce((a, l) => a + l[1], 0);
+  if (state.day === "peak"){ const up = total * P.weekendUplift; lines.push([`Friday or weekend (+${Math.round(P.weekendUplift * 100)}%)`, up]); total += up; }
+  if (total < P.minimumCharge){ lines.push(["Minimum charge top-up", P.minimumCharge - total]); total = P.minimumCharge; }
+  const fill = vol / veh.capacityCuFt;
+  return {vol, n, nDis, veh, over, crew, hours, lines, total, fill, lo: total * P.rangeLow, hi: total * P.rangeHigh};
+}
+
+function render(){
+  const r = calc(), empty = r.vol <= 0;
+  // presets + chips
+  $("presets").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === state.preset));
+  document.querySelectorAll(".chips[data-k]").forEach(g =>
+    g.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === state[g.dataset.k])));
+  // item counts
+  ITEMS.forEach(it => { const c = state.counts[it.id] || 0; $("c_" + it.id).textContent = c;
+    const row = document.querySelector(`[data-row="${it.id}"]`); row.classList.toggle("has", c > 0);
+    row.querySelector('[data-v="-1"]').disabled = c <= 0; row.querySelector('[data-v="1"]').disabled = c >= PRICES.maxPerItem; });
+  ROOMS.forEach(rm => { let n = 0, v = 0;
+    ITEMS.filter(it => it.room === rm.id).forEach(it => { const c = state.counts[it.id] || 0; n += c; v += c * it.cuft; });
+    $("rc_" + rm.id).innerHTML = n ? `<strong>${plural(n, "item")}</strong><span class="cf"> · ${fmt(v)} cu ft</span>` : "None added"; });
+  // move details
+  $("milesR").value = state.miles; if (document.activeElement !== $("milesN")) $("milesN").value = state.miles;
+  $("ffOut").textContent = state.floorsFrom; $("ftOut").textContent = state.floorsTo;
+  document.querySelectorAll("[data-fl]").forEach(b => { const v = b.dataset.fl === "from" ? state.floorsFrom : state.floorsTo;
+    b.disabled = +b.dataset.v < 0 ? v <= 0 : v >= PRICES.maxFloors; });
+
+  // van drawing: rebuild only when the vehicle changes, so the fill can animate
+  const key = r.veh.units.join("+");
+  if (key !== vanKey){ $("vanBox").innerHTML = vanSVG(r.veh.units); vanKey = key; }
+  const shown = empty ? 0 : Math.min(1, r.fill);
+  requestAnimationFrame(() => $("vanBox").querySelectorAll(".load-cover").forEach(c => c.style.transform = `scaleX(${1 - shown})`));
+
+  const pct = Math.round(Math.min(1, r.fill) * 100);
+  $("vehName").textContent = empty ? "No items yet" : r.veh.name;
+  $("volTxt").textContent = `${fmt(r.vol)} cu ft to move`;
+  $("capFill").style.width = (empty ? 0 : pct) + "%";
+  $("capBar").setAttribute("aria-valuenow", empty ? 0 : pct);
+  $("capTxt").textContent = empty ? "Add some items above" : r.over ? "Over capacity" : `About ${pct}% full`;
+  $("capMax").textContent = `holds about ${fmt(r.veh.capacityCuFt)} cu ft`;
+  $("crewTxt").textContent = empty ? "–" : plural(r.crew, "mover");
+  $("hrsTxt").textContent = empty ? "–" : `${r.hours} hrs`;
+  $("itemsTxt").textContent = fmt(r.n);
+
+  const notes = [];
+  if (r.over) notes.push("That's a big load. We'd plan the vehicles and crew with you at a survey, so treat this price as a rough guide.");
+  if (!empty && r.hours > PRICES.longDayHours) notes.push("That's more than a normal working day. We may suggest loading the day before, or an overnight stop on a long trip.");
+  $("note").hidden = !notes.length; $("note").textContent = notes.join(" ");
+
+  const txt = empty ? "Add your items" : `${gbp(r.lo)} – ${gbp(r.hi)}`;
+  $("range").textContent = txt;
+  $("meta").textContent = empty ? "Your price range appears here." : `Based on ${state.day === "peak" ? "a Friday or weekend" : "a Monday to Thursday"} move of ${plural(state.miles, "mile")}.`;
+  $("break").innerHTML = empty ? "" : r.lines.map(([k, v]) => `<dt>${k}</dt><dd>${gbp(v)}</dd>`).join("") +
+    `<dt class="tot">Middle estimate</dt><dd class="tot">${gbp(r.total)}</dd>`;
+  $("barVal").textContent = txt;
+  $("barLbl").textContent = empty ? "Estimate" : `${r.veh.name} · ${plural(r.crew, "mover")}`;
+
+  // plain-text summary for "Copy my details"
+  const pick = k => document.querySelector(`.chips[data-k="${k}"] [aria-pressed="true"]`).textContent;
+  const itemLines = ROOMS.map(rm => {
+    const list = ITEMS.filter(it => it.room === rm.id && state.counts[it.id] > 0).map(it => `${state.counts[it.id]} × ${it.name}`);
+    return list.length ? `- ${rm.label}: ${list.join(", ")}` : ""; }).filter(Boolean);
+  SUMMARY = `Moving enquiry for ${BRAND.name}\n` +
+    `Home size: ${state.preset ? PRESETS[state.preset].label + (state.tuned ? " (items adjusted)" : "") : "Custom"}\n` +
+    `Items:\n${itemLines.join("\n") || "- None added"}\n` +
+    `Total volume: about ${fmt(r.vol)} cu ft\n` +
+    `Distance: ${plural(state.miles, "mile")}\n` +
+    `Stairs with no lift: ${state.floorsFrom} at old address, ${state.floorsTo} at new address\n` +
+    `Long walk from parking: ${pick("walk")}\n` +
+    `Packing: ${pick("packing")}\n` +
+    `Take apart and rebuild: ${pick("dismantle")}${state.dismantle === "yes" ? ` (${plural(r.nDis, "item")})` : ""}\n` +
+    `Moving day: ${pick("day")}\n` +
+    (empty ? "" : `Suggested: ${r.veh.name}, ${plural(r.crew, "mover")}, about ${r.hours} hours\n`) +
+    `Estimate shown: ${txt}`;
+}
+
+/* ---------- Events ---------- */
+function bind(){
+  $("rooms").addEventListener("click", e => {
+    const b = e.target.closest("[data-it]"); if (!b) return;
+    const id = b.dataset.it;
+    state.counts[id] = Math.max(0, Math.min(PRICES.maxPerItem, (state.counts[id] || 0) + +b.dataset.v));
+    state.tuned = true; render();
+  });
+  $("rooms").addEventListener("toggle", e => {
+    const d = e.target; if (d.open) openRooms.add(d.dataset.room); else openRooms.delete(d.dataset.room);
+  }, true);
+  document.querySelectorAll(".chips[data-k]").forEach(g => g.onclick = e => {
+    const b = e.target.closest("button"); if (b){ state[g.dataset.k] = b.dataset.v; render(); } });
+  document.querySelectorAll("[data-fl]").forEach(b => b.onclick = () => {
+    const k = b.dataset.fl === "from" ? "floorsFrom" : "floorsTo";
+    state[k] = Math.max(0, Math.min(PRICES.maxFloors, state[k] + +b.dataset.v)); render(); });
+  const setMiles = v => { v = Math.round(+v); state.miles = isFinite(v) ? Math.max(0, Math.min(300, v)) : 0; render(); };
+  $("milesR").oninput = e => setMiles(e.target.value);
+  $("milesN").oninput = e => { if (e.target.value !== "") setMiles(e.target.value); };
+  $("milesN").onblur = () => { $("milesN").value = state.miles; };
+  $("copyBtn").onclick = async () => {
+    const b = $("copyBtn"), box = $("copyBox");
+    let ok = false;
+    try { await navigator.clipboard.writeText(SUMMARY); ok = true; }
+    catch (err) {
+      try { box.value = SUMMARY; box.hidden = false; box.select(); ok = document.execCommand("copy"); } catch (e2) { ok = false; }
+    }
+    if (ok){ box.hidden = true; b.textContent = "Copied. Paste it into your message to us"; }
+    else { box.value = SUMMARY; box.hidden = false; box.select(); b.textContent = "Select and copy the text below"; }
+    setTimeout(() => b.textContent = "Copy my details", 3000);
+  };
+}
+
+function init(){
+  const r = document.documentElement.style;
+  r.setProperty("--brand", BRAND.colour); r.setProperty("--accent", BRAND.accent);
+  r.setProperty("--brand-ink", BRAND.colourInk); r.setProperty("--accent-ink", BRAND.accentInk);
+  $("firmName").textContent = BRAND.name; $("demoTag").hidden = !BRAND.demo;
+  $("cta").href = $("barCta").href = BRAND.bookingUrl;
+  $("cta").textContent = BRAND.bookingLabel;
+  $("notes").innerHTML = `${BRAND.smallprint} ${BRAND.demo ? '<span class="ph">Demo prices: each business sets its own.</span>' : ""}`;
+  $("phone").textContent = `Prefer to talk? Call ${BRAND.phone}`;
+  state.miles = PRICES.defaultMiles;
+  buildPresets(); applyPreset(PRICES.defaultPreset); buildRooms(); bind(); render();
+}
+
+/* ============ BRAND & PRICE SETTINGS: each business edits these ============ */
+const BRAND = {
+  name: "Example Removals",                  // invented demo business
+  demo: true,                                // shows the "Demo" badge and demo-price note
+  colour: "#143D2E", colourInk: "#FFFFFF",   // main colour (deep green) and text on it
+  accent: "#FF8C1A", accentInk: "#231300",   // accent colour (orange) and text on it
+  bookingUrl: "https://example.com/book-survey",   // where the main button goes
+  bookingLabel: "Book a free survey",        // main button text
+  phone: "01234 567890",                     // placeholder number
+  smallprint: "This is an estimate, not a quote. Prices assume normal access. We'll confirm the price after a survey.",
+};
+
+const PRICES = {                             // Demo prices only: the business sets its own.
+  moverHourly: 30,            // £ per mover per hour (labour, includes driving time)
+  minHours: 3,                // hours: shortest job we book
+  avgSpeedMph: 35,            // mph: average road speed for a loaded van
+  baseTravelHours: 0.5,       // hours: getting from our yard to the old address
+  returnTripFactor: 1.5,      // × one-way drive time charged (drive there + part of the trip back)
+  freeMiles: 20,              // miles included before mileage is charged
+  perMile: 1.6,               // £ per mile beyond freeMiles
+  loadCuFtPerMoverHour: 90,   // cu ft one mover loads in an hour (normal access)
+  unloadSpeedFactor: 0.75,    // × loading time: unloading is a bit quicker
+  stairsPctPerFloor: 0.12,    // +12% loading/unloading time per flight of stairs with no lift, at that address
+  longWalkFactor: 1.2,        // × loading and unloading time when the van parks far from the door
+  fillTarget: 0.95,           // only fill a vehicle to 95% when choosing it (room for awkward shapes)
+  crewBands: [                // crew size by total volume (cu ft)
+    {upToCuFt: 450,   movers: 2},
+    {upToCuFt: 1200,  movers: 3},
+    {upToCuFt: 99999, movers: 4},
+  ],
+  packing: {                  // packing service, £ per cu ft of your load, with a minimum £
+    fragiles: {label: "Packing fragiles", perCuFt: 0.3, minimum: 90},
+    full:     {label: "Full packing service", perCuFt: 0.9, minimum: 220},
+  },
+  dismantlePerItem: 20,       // £ per item to take apart and rebuild (items marked dismantle: true)
+  dismantleHoursPerItem: 0.5, // crew-hours per item, shared across the crew
+  weekendUplift: 0.15,        // +15% on Fridays, Saturdays and Sundays
+  minimumCharge: 250,         // £ smallest total we charge
+  rangeLow: 0.9, rangeHigh: 1.2,  // the price range shown, as × the middle estimate
+  longDayHours: 10,           // hours: above this we show a "long day" note
+  maxPerItem: 40,             // most of any one item a stepper allows
+  maxFloors: 4,               // most flights of stairs selectable per address
+  defaultMiles: 15,           // miles shown when the page opens
+  defaultPreset: "bed2",      // home size picked when the page opens
+};
+
+const VEHICLES = [            // smallest first. capacityCuFt = usable load space; dayRate = £ per day incl. fuel; units = drawing
+  {name: "Small van",             capacityCuFt: 220,  dayRate: 70,  units: ["small"]},
+  {name: "Large van (LWB)",       capacityCuFt: 400,  dayRate: 95,  units: ["lwb"]},
+  {name: "Luton van",             capacityCuFt: 550,  dayRate: 130, units: ["luton"]},
+  {name: "7.5 tonne lorry",       capacityCuFt: 1100, dayRate: 150, units: ["lorry"]},
+  {name: "Lorry + Luton van",     capacityCuFt: 1650, dayRate: 260, units: ["lorry", "luton"]},
+  {name: "Two 7.5 tonne lorries", capacityCuFt: 2200, dayRate: 300, units: ["lorry", "lorry"]},
+];
+
+const ROOMS = [               // rooms shown in "Fine-tune your items", in this order
+  {id: "living",  label: "Living room"},
+  {id: "bed",     label: "Bedrooms"},
+  {id: "kitchen", label: "Kitchen"},
+  {id: "dining",  label: "Dining"},
+  {id: "garden",  label: "Garden & shed"},
+  {id: "garage",  label: "Garage & loft"},
+  {id: "boxes",   label: "Boxes & bags"},
+];
+
+const ITEMS = [               // cuft = typical volume of one item in cubic feet; dismantle: true = can be taken apart and rebuilt
+  {id: "sofa3",    room: "living",  name: "Sofa (3-seat)",          cuft: 50},
+  {id: "sofa2",    room: "living",  name: "Sofa (2-seat)",          cuft: 35},
+  {id: "armchair", room: "living",  name: "Armchair",               cuft: 20},
+  {id: "tv",       room: "living",  name: "TV and stand",           cuft: 12},
+  {id: "coffee",   room: "living",  name: "Coffee table",           cuft: 8},
+  {id: "bookcase", room: "living",  name: "Bookcase or shelves",    cuft: 20},
+  {id: "sideboard",room: "living",  name: "Sideboard or cabinet",   cuft: 25},
+  {id: "lamp",     room: "living",  name: "Lamp or rug",            cuft: 4},
+  {id: "dbed",     room: "bed",     name: "Bed (double or king)",   cuft: 60, dismantle: true},
+  {id: "sbed",     room: "bed",     name: "Bed (single)",           cuft: 30, dismantle: true},
+  {id: "wardrobe", room: "bed",     name: "Wardrobe",               cuft: 45, dismantle: true},
+  {id: "drawers",  room: "bed",     name: "Chest of drawers",       cuft: 18},
+  {id: "bedside",  room: "bed",     name: "Bedside table",          cuft: 5},
+  {id: "dressing", room: "bed",     name: "Dressing table or desk", cuft: 18},
+  {id: "fridge",   room: "kitchen", name: "Fridge-freezer",         cuft: 35},
+  {id: "washer",   room: "kitchen", name: "Washing machine",        cuft: 15},
+  {id: "dryer",    room: "kitchen", name: "Tumble dryer or dishwasher", cuft: 15},
+  {id: "microwave",room: "kitchen", name: "Microwave or small appliance", cuft: 3},
+  {id: "kchair",   room: "kitchen", name: "Kitchen stool or bin",   cuft: 4},
+  {id: "dtable",   room: "dining",  name: "Dining table",           cuft: 25, dismantle: true},
+  {id: "dchair",   room: "dining",  name: "Dining chair",           cuft: 5},
+  {id: "display",  room: "dining",  name: "Display cabinet",        cuft: 25},
+  {id: "gtable",   room: "garden",  name: "Garden table",           cuft: 15},
+  {id: "gchair",   room: "garden",  name: "Garden chair",           cuft: 4},
+  {id: "mower",    room: "garden",  name: "Lawnmower",              cuft: 8},
+  {id: "bike",     room: "garden",  name: "Bike",                   cuft: 10},
+  {id: "bbq",      room: "garden",  name: "BBQ",                    cuft: 10},
+  {id: "gtools",   room: "garden",  name: "Garden tools (bundle)",  cuft: 6},
+  {id: "loftbox",  room: "garage",  name: "Storage box (loft)",     cuft: 3},
+  {id: "suitcase", room: "garage",  name: "Suitcase",               cuft: 4},
+  {id: "toolbox",  room: "garage",  name: "Toolbox or workbench",   cuft: 10},
+  {id: "freezer",  room: "garage",  name: "Chest freezer",          cuft: 25},
+  {id: "ladder",   room: "garage",  name: "Ladder",                 cuft: 6},
+  {id: "box",      room: "boxes",   name: "Packed box (medium)",    cuft: 3},
+  {id: "bigbox",   room: "boxes",   name: "Packed box (large)",     cuft: 4.5},
+  {id: "bag",      room: "boxes",   name: "Bag of bedding or clothes", cuft: 3},
+];
+
+const PRESETS = {             // home size buttons: label, sub-label, and how many of each item they start with
+  studio: {label: "Studio / 1-bed flat", sub: "A small load", items:
+    {sofa2:1, armchair:1, tv:1, coffee:1, lamp:2, dbed:1, wardrobe:1, drawers:1, bedside:1, fridge:1, washer:1, microwave:1, dtable:1, dchair:2, bike:1, suitcase:2, box:15, bag:4}},
+  bed2:   {label: "2-bed", sub: "Flat or house", items:
+    {sofa3:1, armchair:1, tv:1, coffee:1, bookcase:1, lamp:3, dbed:1, sbed:1, wardrobe:2, drawers:2, bedside:3, dressing:1, fridge:1, washer:1, microwave:2, dtable:1, dchair:4, gtable:1, gchair:2, mower:1, bike:1, loftbox:5, suitcase:2, box:25, bag:6}},
+  bed3:   {label: "3-bed", sub: "Family home", items:
+    {sofa3:1, sofa2:1, armchair:1, tv:1, coffee:1, bookcase:2, sideboard:1, lamp:4, dbed:2, sbed:1, wardrobe:3, drawers:3, bedside:4, dressing:1, fridge:1, washer:1, dryer:1, microwave:2, kchair:2, dtable:1, dchair:6, display:1, gtable:1, gchair:4, mower:1, bike:2, bbq:1, gtools:1, loftbox:10, suitcase:3, toolbox:1, ladder:1, box:40, bigbox:5, bag:8}},
+  bed4:   {label: "4-bed", sub: "Larger home", items:
+    {sofa3:2, sofa2:1, armchair:2, tv:2, coffee:1, bookcase:3, sideboard:1, lamp:5, dbed:3, sbed:1, wardrobe:4, drawers:4, bedside:6, dressing:2, fridge:1, washer:1, dryer:2, microwave:3, kchair:3, dtable:1, dchair:6, display:1, gtable:1, gchair:6, mower:1, bike:3, bbq:1, gtools:2, loftbox:15, suitcase:4, toolbox:1, freezer:1, ladder:1, box:55, bigbox:8, bag:10}},
+  bed5:   {label: "5+ bed", sub: "Big house", items:
+    {sofa3:2, sofa2:2, armchair:3, tv:3, coffee:2, bookcase:4, sideboard:2, lamp:6, dbed:4, sbed:2, wardrobe:5, drawers:5, bedside:8, dressing:2, fridge:2, washer:1, dryer:2, microwave:3, kchair:4, dtable:1, dchair:8, display:2, gtable:2, gchair:8, mower:1, bike:4, bbq:1, gtools:2, loftbox:20, suitcase:5, toolbox:2, freezer:1, ladder:2, box:70, bigbox:10, bag:12}},
+};
+/* ========================================================================== */
+
+init();
+</script>
+
+<script>
+/* Embedding support: when this tool sits inside another website (an iframe), tell that page how tall it is
+   so the frame can grow to fit. Harmless when opened on its own. */
+(function(){
+  var embedded = false; try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+  if (!embedded) return;
+  document.documentElement.classList.add("embedded");
+  document.documentElement.style.minHeight = "0"; document.body.style.minHeight = "0";
+  var last = 0;
+  function send(){ var b = document.body, cs = getComputedStyle(b), lc = b.lastElementChild, mb = lc ? parseFloat(getComputedStyle(lc).marginBottom) || 0 : 0;
+    var h = Math.ceil(b.getBoundingClientRect().height + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom) + mb);
+    if (Math.abs(h - last) < 2) return; last = h;
+    parent.postMessage({type: "tool-height", height: h}, "*"); }
+  window.addEventListener("load", send);
+  if (window.ResizeObserver) new ResizeObserver(send).observe(document.body); else setInterval(send, 500);
+  send();
+})();
+</script>
+</body>
+</html>

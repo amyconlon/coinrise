@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Many Lessons Will I Need?</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a learner's journey down one road. Each question moves a little car along a strip of tarmac;
+   the result shows the same road from "you are here" to the chequered "test-ready" line.
+   Colours come from BRAND settings via CSS custom properties. */
+:root{
+  --brand:#1640FF; --brand-ink:#FFFFFF; --accent:#FFD60A; --accent-ink:#1A1600;
+  --lplate:#E0242B; --tarmac:#2B2F3A; --tarmac-2:#3A3F4C;
+  --bg:#F2F5FF; --card:#FFFFFF; --ink:#141A33; --muted:#535B76; --line:#D9DFF2; --soft:#E7ECFF;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Figtree",system-ui,sans-serif;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);margin:0;overflow-x:hidden}
+.wrap{max-width:680px;margin:0 auto;padding:16px 16px 120px}
+button{font:inherit;color:inherit}
+
+/* Header */
+header.top{background:var(--brand);color:var(--brand-ink);border-radius:22px 22px 6px 6px;padding:20px 18px 0;position:relative;overflow:hidden}
+.firm{display:flex;align-items:center;gap:8px;font:600 .85rem var(--body);flex-wrap:wrap}
+.demo{font:700 .7rem var(--body);background:var(--accent);color:var(--accent-ink);padding:2px 9px;border-radius:999px}
+.hero{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin-top:10px}
+header.top h1{font:800 clamp(1.7rem,6.4vw,2.4rem)/1.02 var(--display);margin:0;letter-spacing:-.02em;text-wrap:balance}
+header.top p{margin:8px 0 0;font-size:.95rem;max-width:42ch;opacity:.92}
+.lplate{width:74px;height:74px;transform:rotate(7deg);filter:drop-shadow(0 6px 10px rgba(0,0,20,.3));flex-shrink:0}
+.kerb{height:26px;margin:18px -18px 0;background:var(--tarmac);position:relative}
+.kerb::before{content:"";position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;
+  background:repeating-linear-gradient(90deg,var(--accent) 0 26px,transparent 26px 46px)}
+
+/* Road progress (quiz) */
+.road{position:relative;height:46px;background:var(--tarmac);border-radius:10px;margin:14px 0 0;overflow:hidden}
+.road .lane{position:absolute;left:12px;right:12px;top:50%;height:4px;margin-top:-2px;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 18px,transparent 18px 32px)}
+.road .done{position:absolute;left:0;top:0;bottom:0;background:var(--tarmac-2);transition:width .35s ease}
+.road .done::after{content:"";position:absolute;left:12px;right:0;top:50%;height:4px;margin-top:-2px;
+  background:repeating-linear-gradient(90deg,var(--accent) 0 18px,transparent 18px 32px)}
+.car{position:absolute;top:50%;width:46px;height:26px;margin:-13px 0 0 -23px;transition:left .35s ease}
+.flag{position:absolute;right:0;top:0;bottom:0;width:16px;
+  background:conic-gradient(#fff 25%,#141A33 0 50%,#fff 0 75%,#141A33 0) 0 0/8px 8px}
+.stepmeta{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:6px;font-size:.85rem;color:var(--muted)}
+.stepmeta b{color:var(--ink);font-weight:700}
+
+/* Quiz card */
+.card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:18px;margin-top:14px}
+.q h2{font:800 1.45rem/1.15 var(--display);margin:0 0 4px;letter-spacing:-.01em;outline:none}
+.q .help{margin:0 0 14px;color:var(--muted);font-size:.93rem}
+.opts{display:grid;gap:8px}
+.opts.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;text-align:left;cursor:pointer;
+  background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 14px;transition:border-color .15s,background .15s}
+.opt:hover{border-color:var(--brand)}
+.opt .dot{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.opt b{display:block;font:700 1rem/1.25 var(--body)}
+.opt small{display:block;color:var(--muted);font-size:.84rem;line-height:1.3}
+.opt[aria-pressed="true"]{border-color:var(--brand);background:var(--soft)}
+.opt[aria-pressed="true"] .dot{border-color:var(--brand);background:var(--brand);box-shadow:inset 0 0 0 4px #fff}
+.nav{display:flex;gap:10px;margin-top:16px;align-items:center}
+.btn-back{min-height:44px;padding:0 16px;border-radius:12px;border:2px solid var(--line);background:#fff;font-weight:700;cursor:pointer}
+.btn-back[hidden]{display:none}
+.btn-reset{margin-left:auto;min-height:44px;padding:0 6px;border:0;background:none;color:var(--muted);font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+/* Result */
+.result h2{font:800 1.1rem var(--display);margin:0;color:var(--muted)}
+.headline{font:800 clamp(2.4rem,11vw,3.4rem)/1 var(--display);letter-spacing:-.03em;margin:6px 0 2px;color:var(--brand);font-variant-numeric:tabular-nums}
+.headline span{font-size:.42em;letter-spacing:0;color:var(--ink);display:block;margin-top:6px;font-weight:600}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:16px 0}
+.fact{background:var(--soft);border-radius:14px;padding:12px}
+.fact .k{font-size:.8rem;color:var(--muted);font-weight:600}
+.fact .v{font:800 1.25rem/1.15 var(--display);font-variant-numeric:tabular-nums;margin-top:2px}
+.fact .s{font-size:.8rem;color:var(--muted);margin-top:2px}
+.bigroad{position:relative;margin:18px 0 6px;padding-top:30px}
+.bigroad .road{height:54px;margin:0}
+.bigroad .car{width:54px;height:30px;margin:-15px 0 0 -27px}
+.pin{position:absolute;top:0;transform:translateX(-50%);font:700 .76rem var(--body);background:var(--ink);color:#fff;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.pin::after{content:"";position:absolute;left:50%;bottom:-5px;margin-left:-5px;border:5px solid transparent;border-bottom:0;border-top-color:var(--ink)}
+.roadlabels{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);font-weight:600}
+.pkg{border:2px solid var(--accent);background:#FFFBE6;border-radius:16px;padding:14px;margin:16px 0}
+.pkg .k{font-size:.82rem;font-weight:700;color:#6B5A00}
+.pkg .n{font:800 1.3rem var(--display);margin:2px 0}
+.pkg p{margin:4px 0 0;font-size:.92rem}
+h3{font:800 1.08rem var(--display);margin:20px 0 8px}
+.break{display:grid;grid-template-columns:1fr auto;gap:6px 14px;font-size:.92rem;margin:0;font-variant-numeric:tabular-nums}
+.break dt{color:var(--muted)} .break dd{margin:0;text-align:right;font-weight:700;white-space:nowrap}
+.break .tot{border-top:2px solid var(--line);padding-top:6px;color:var(--ink);font-weight:700}
+.typical{margin:0 0 10px;font-size:.92rem}
+.typical sup a{color:var(--brand);text-decoration:none;font-weight:700}
+.checklist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.checklist label{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:2px solid var(--line);border-radius:12px;cursor:pointer;min-height:44px}
+.checklist input{width:22px;height:22px;margin:0;flex-shrink:0;accent-color:var(--brand)}
+.checklist b{display:block;font-weight:700}
+.checklist small{display:block;color:var(--muted);font-size:.85rem}
+.checklist input:checked ~ span b{text-decoration:line-through;text-decoration-color:var(--brand)}
+.cta{display:block;text-align:center;text-decoration:none;background:var(--accent);color:var(--accent-ink);font:800 1.1rem var(--display);padding:15px;border-radius:14px;margin-top:20px;border:2px solid var(--accent-ink)}
+.ghost{display:block;width:100%;min-height:48px;margin-top:10px;text-align:center;background:#fff;color:var(--brand);border:2px solid var(--brand);font:700 .98rem var(--body);border-radius:14px;cursor:pointer}
+.links{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px}
+.links button{min-height:44px;border:0;background:none;color:var(--brand);font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0}
+.small{font-size:.78rem;color:var(--muted);line-height:1.45;margin:12px 0 0}
+.ph{background:#FFF6CC;border:1px dashed #D9B800;border-radius:6px;padding:1px 6px;color:#5E4E00}
+textarea.copy{width:100%;min-height:130px;font:.8rem ui-monospace,monospace;border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:8px}
+.copied{font-size:.85rem;font-weight:700;color:#0B7A3B;margin-top:6px;min-height:1.3em}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--brand);color:var(--brand-ink);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(10,20,80,.25);z-index:5}
+.bar[hidden]{display:none}
+.bar .in{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.bar .lbl{font-size:.75rem;opacity:.85}
+.bar .val{font:800 1.2rem var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar a{margin-left:auto;background:var(--accent);color:var(--accent-ink);text-decoration:none;font:800 .95rem var(--display);padding:12px 14px;border-radius:10px;white-space:nowrap;min-height:44px}
+button:focus-visible,a:focus-visible,input:focus-visible,h2:focus-visible{outline:3px solid var(--lplate);outline-offset:2px}
+.embedded .bar{display:none!important}
+.embedded .wrap{padding-bottom:24px}
+@media (max-width:380px){
+  .opts.two{grid-template-columns:1fr}
+  .lplate{width:58px;height:58px}
+  .facts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="firm"><span id="firmName">Example School of Motoring</span><span class="demo" id="demoTag">Demo</span></div>
+    <div class="hero">
+      <div>
+        <h1>How many lessons will I need?</h1>
+        <p>Answer six quick questions. We'll give you a rough number of hours, time and cost to get test-ready.</p>
+      </div>
+      <svg class="lplate" viewBox="0 0 100 100" aria-hidden="true">
+        <rect x="3" y="3" width="94" height="94" rx="8" fill="#fff" stroke="#D5D9E6" stroke-width="2"/>
+        <path id="lShape" d="M30 18h16v48h28v16H30z" fill="#E0242B"/>
+      </svg>
+    </div>
+    <div class="kerb" aria-hidden="true"></div>
+  </header>
+
+  <main id="app" aria-live="polite"></main>
+</div>
+
+<div class="bar" id="bar" hidden><div class="in">
+  <div><div class="lbl">Your estimate</div><div class="val" id="barVal"></div></div>
+  <a id="barCta" href="#" target="_blank" rel="noopener">Book a lesson</a>
+</div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const gbp = v => "£" + (Math.round(v / 10) * 10).toLocaleString("en-GB");
+const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
+const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const CAR = c => `<svg class="car" viewBox="0 0 46 26" aria-hidden="true">
+  <path d="M4 18v-5c0-1.5 1-2.5 2.5-2.8L12 9l5-6h14l6 6h3.5C42 9 43 10 43 11.5V18z" fill="${c}"/>
+  <path d="M18.5 5h5.5v5h-10zM26 5h4.5l4.5 5H26z" fill="#BFD0FF"/>
+  <rect x="35" y="5.5" width="8" height="5" rx="1" fill="#fff" stroke="#E0242B" stroke-width=".6"/>
+  <path d="M37.5 6.5h1.2v2.5h2.2v1h-3.4z" fill="#E0242B"/>
+  <circle cx="12" cy="19" r="4.5" fill="#141A33"/><circle cx="12" cy="19" r="1.8" fill="#C8CDDA"/>
+  <circle cx="35" cy="19" r="4.5" fill="#141A33"/><circle cx="35" cy="19" r="1.8" fill="#C8CDDA"/>
+</svg>`;
+
+let STEPS = [];
+const state = {step: 0, answers: {}};
+let SUMMARY = "";
+
+function buildSteps(){
+  const Q = RULES.questions;
+  STEPS = ["transmission","experience","hoursHad","practice","pace","confidence"].map(key => ({
+    key, q: Q[key].q, help: Q[key].help, two: !!Q[key].twoCol, options: RULES[key]
+  }));
+}
+
+function roadHTML(frac, big){
+  const pct = Math.max(4, Math.min(94, frac * 100));
+  return `<div class="road" role="presentation"><div class="done" style="width:${pct}%"></div><div class="lane" style="left:${pct}%"></div><div class="flag"></div>${CAR(BRAND.accent)}</div>`
+    .replace('class="car"', `class="car" style="left:clamp(30px,${pct}%,calc(100% - 46px))"`);
+}
+
+function renderStep(focus){
+  const s = STEPS[state.step], n = STEPS.length, chosen = state.answers[s.key];
+  const opts = Object.entries(s.options).map(([k, o]) =>
+    `<button type="button" class="opt" data-v="${k}" aria-pressed="${chosen === k}"><span class="dot"></span><span><b>${esc(o.label)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ""}</span></button>`).join("");
+  $("app").innerHTML = `
+    ${roadHTML(state.step / n)}
+    <div class="stepmeta"><span>Question <b>${state.step + 1}</b> of ${n}</span><span>Test-ready</span></div>
+    <section class="card q">
+      <h2 id="qh" tabindex="-1">${esc(s.q)}</h2>
+      ${s.help ? `<p class="help">${esc(s.help)}</p>` : ""}
+      <div class="opts${s.two ? " two" : ""}" role="group" aria-labelledby="qh">${opts}</div>
+      <div class="nav">
+        <button type="button" class="btn-back" id="back" ${state.step === 0 ? "hidden" : ""}>Back</button>
+        ${Object.keys(state.answers).length ? `<button type="button" class="btn-reset" id="reset">Start again</button>` : ""}
+      </div>
+    </section>`;
+  $("bar").hidden = true;
+  $("app").querySelector(".opts").onclick = e => {
+    const b = e.target.closest(".opt"); if (!b) return;
+    state.answers[s.key] = b.dataset.v;
+    $("app").querySelectorAll(".opt").forEach(x => x.setAttribute("aria-pressed", x === b));
+    const go = () => { if (state.step < n - 1){ state.step++; renderStep(true); } else { state.step = n; renderResult(); } };
+    reduceMotion ? go() : setTimeout(go, 220);
+  };
+  if ($("back")) $("back").onclick = () => { state.step--; renderStep(true); };
+  if ($("reset")) $("reset").onclick = startAgain;
+  if (focus) $("qh").focus({preventScroll: true});
+}
+
+function startAgain(){ state.step = 0; state.answers = {}; renderStep(true); scrollTop(); }
+function scrollTop(){ try { $("app").scrollIntoView({block: "start", behavior: reduceMotion ? "auto" : "smooth"}); } catch(e){} }
+
+// The estimate: start from a typical new learner, then adjust for each answer.
+function calculate(a){
+  const R = RULES, rows = [];
+  const tr = R.transmission[a.transmission], ex = R.experience[a.experience], hh = R.hoursHad[a.hoursHad],
+        pr = R.practice[a.practice], pa = R.pace[a.pace], cf = R.confidence[a.confidence];
+  const start = R.averageLessonHours * tr.factor;
+  rows.push([`Typical starting point (${tr.label.toLowerCase()})`, start, "base"]);
+  let h = start;
+  const step = (label, next) => { if (Math.round(next - h) !== 0) rows.push([label, next - h]); h = next; };
+  if (ex.factor !== 1) step(`Your experience: ${ex.label.toLowerCase()}`, h * ex.factor);
+  if (hh.hours > 0) step(`Lessons already had (${hh.label.toLowerCase()})`, Math.max(0, h - hh.hours * R.hoursCredit));
+  if (pr.factor !== 1) step(`Private practice: ${pr.label.toLowerCase()}`, h * pr.factor);
+  if (pa.factor !== 1) step(`Learning pace: ${pa.label.toLowerCase()}`, h * pa.factor);
+  if (cf.factor !== 1) step(`Feeling ${cf.label.toLowerCase()}`, h * cf.factor);
+  if (h < ex.floor) step("At least this many to get you test-ready", ex.floor);
+  const mid = Math.max(R.minHours, h);
+  const rnd = v => mid < R.roundSmallBelow ? v : Math.round(v / R.roundHoursTo) * R.roundHoursTo;
+  let lo = Math.max(R.minHours, Math.floor(rnd(mid * R.rangeLow)));
+  let hi = Math.max(lo + 2, Math.ceil(rnd(mid * R.rangeHigh)));
+  if (mid < R.roundSmallBelow){ lo = Math.max(R.minHours, Math.floor(mid * R.rangeLow)); hi = Math.max(lo + 2, Math.ceil(mid * R.rangeHigh)); }
+  const rate = a.transmission === "auto" ? PRICES.hourlyAuto : PRICES.hourlyManual;
+  const wLo = Math.max(1, Math.ceil(lo / pa.hoursPerWeek)), wHi = Math.max(wLo, Math.ceil(hi / pa.hoursPerWeek));
+  const progress = Math.max(0, Math.min(1, 1 - mid / (R.averageLessonHours * tr.factor)));
+  return {rows, mid, lo, hi, rate, wLo, wHi, progress, pace: pa, tr};
+}
+
+function discountFor(hours){
+  let d = 0; PRICES.blocks.forEach(b => { if (hours >= b.hours && b.discount > d) d = b.discount; }); return d;
+}
+function suggestPackage(r){
+  const list = PACKAGES.filter(p => p.type === r.pace.packageType).sort((x, y) => x.hours - y.hours);
+  if (!list.length || r.hi < list[0].hours * PRICES.payAsYouGoBelow) return null;
+  const fit = list.find(p => p.hours >= r.mid) || list[list.length - 1];
+  const d = discountFor(fit.hours), price = fit.hours * r.rate * (1 - d);
+  const cost = h => price + Math.max(0, h - fit.hours) * r.rate;
+  return {p: fit, d, price, lo: cost(r.lo), hi: cost(r.hi), topUp: fit.hours < r.hi};
+}
+function weeksText(r){
+  const w = r.wLo === r.wHi ? plural(r.wLo, "week") : `${r.wLo}–${r.wHi} weeks`;
+  if (r.wHi >= 9){ const mLo = Math.max(1, Math.round(r.wLo / 4.35)), mHi = Math.max(mLo, Math.round(r.wHi / 4.35));
+    return {main: w, sub: `Roughly ${mLo === mHi ? plural(mLo, "month") : mLo + "–" + mHi + " months"}`}; }
+  return {main: w, sub: ""};
+}
+
+function renderResult(){
+  const a = state.answers, r = calculate(a), pk = suggestPackage(r), wk = weeksText(r);
+  const hrs = `${r.lo}–${r.hi}`;
+  const payLo = r.lo * r.rate, payHi = r.hi * r.rate;
+  const payTxt = `${gbp(payLo)}–${gbp(payHi)}`;
+  const pkLine = pk ? (Math.round(pk.lo / 10) === Math.round(pk.hi / 10) ? `about ${gbp(pk.lo)}` : `${gbp(pk.lo)}–${gbp(pk.hi)}`) : "";
+  const fmtH = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(Math.round(v)) + " hrs";
+  const rowsHTML = r.rows.map(([k, v, base]) => `<dt>${esc(k)}</dt><dd>${base ? Math.round(v) + " hrs" : fmtH(v)}</dd>`).join("") +
+    `<dt class="tot">Our rough estimate</dt><dd class="tot">${hrs} hrs</dd>`;
+  const steps = NEXT_STEPS.map((s, i) => `<li><label><input type="checkbox" id="ns${i}"><span><b>${esc(s.title)}</b><small>${esc(s.detail)}</small></span></label></li>`).join("");
+  const typicalHrs = RULES.averageLessonHours, typicalPrac = RULES.averagePrivatePracticeHours;
+
+  $("app").innerHTML = `
+    <section class="card result">
+      <h2 id="qh" tabindex="-1">You'll need roughly</h2>
+      <div class="headline">${hrs} hours<span>more professional lessons</span></div>
+
+      <div class="bigroad" aria-label="Your progress towards being test-ready">
+        <span class="pin" style="left:${Math.max(12, Math.min(80, r.progress * 100 + 4))}%">You are here</span>
+        ${roadHTML(r.progress, true)}
+      </div>
+      <div class="roadlabels"><span>Day one</span><span>Test-ready</span></div>
+
+      <div class="facts">
+        <div class="fact"><div class="k">Time to test-ready</div><div class="v">${wk.main}</div><div class="s">${wk.sub ? wk.sub + ", " : ""}${esc(r.pace.phrase)}</div></div>
+        <div class="fact"><div class="k">Pay as you go</div><div class="v">${payTxt}</div><div class="s">At £${r.rate} an hour, ${r.tr.label.toLowerCase()}</div></div>
+      </div>
+
+      ${pk ? `<div class="pkg">
+        <div class="k">Suggested for you</div>
+        <div class="n">${esc(pk.p.name)}</div>
+        <p>${esc(pk.p.blurb)}</p>
+        <p><b>${gbp(pk.price)}</b> for ${pk.p.hours} hours${pk.d ? ` (save ${Math.round(pk.d * 100)}%)` : ""}. Your total with this: <b>${pkLine}</b>${pk.topUp ? ", topping up with extra lessons as you go" : ""}.</p>
+      </div>` : `<div class="pkg"><div class="k">Suggested for you</div><div class="n">Pay as you go</div><p>${esc(PRICES.payAsYouGoBlurb)}</p></div>`}
+
+      <h3>How we worked this out</h3>
+      <p class="typical">As a starting point we use about ${typicalHrs} hours of lessons for a new learner with no private practice, then adjust for your answers.${RULES.showSourceNote ? `<sup><a href="#srcnote" aria-label="Source note">*</a></sup>` : ""} We start there and adjust for your answers.</p>
+      <dl class="break">${rowsHTML}</dl>
+
+      <h3>Your next steps</h3>
+      <ul class="checklist">${steps}</ul>
+
+      <a class="cta" id="cta" href="${esc(BRAND.bookingUrl)}" target="_blank" rel="noopener">${esc(BRAND.bookingLabel)}</a>
+      <button class="ghost" id="copyBtn" type="button">Copy my details</button>
+      <div class="copied" id="copied" role="status"></div>
+      <textarea class="copy" id="copyBox" readonly hidden aria-label="Your details to copy"></textarea>
+      <div class="links">
+        <button type="button" id="back">Change my answers</button>
+        <button type="button" id="reset">Start again</button>
+      </div>
+      <p class="small">${esc(BRAND.smallprint)} Prices are a guide. Your instructor will confirm what you need after your first lesson. ${BRAND.demo ? '<span class="ph">Demo prices: each school sets its own.</span>' : ""}</p>
+      ${RULES.showSourceNote ? `<p class="small" id="srcnote">* ${esc(RULES.sourceNote)}</p>` : ""}
+      <p class="small">Prefer to talk? Call ${esc(BRAND.phone)}.</p>
+    </section>`;
+
+  $("barVal").textContent = hrs + " hours";
+  $("barCta").textContent = BRAND.barLabel; $("barCta").href = BRAND.bookingUrl;
+  $("bar").hidden = false;
+
+  const label = k => RULES[k][a[k]].label;
+  SUMMARY = `Driving lessons enquiry for ${BRAND.name}\n` +
+    `Gearbox: ${label("transmission")}\nExperience so far: ${label("experience")}\n` +
+    `Professional lessons already had: ${label("hoursHad")}\nPrivate practice: ${label("practice")}\n` +
+    `How I want to learn: ${label("pace")}\nConfidence: ${label("confidence")}\n` +
+    `Estimate shown: ${hrs} more hours, ${wk.main} to test-ready\n` +
+    `Pay as you go: ${payTxt}\n` + (pk ? `Suggested: ${pk.p.name} (${gbp(pk.price)}), total ${pkLine}\n` : "Suggested: pay as you go\n");
+
+  $("copyBtn").onclick = copySummary;
+  $("back").onclick = () => { state.step = STEPS.length - 1; renderStep(true); };
+  $("reset").onclick = startAgain;
+  $("qh").focus({preventScroll: true});
+  scrollTop();
+}
+
+async function copySummary(){
+  const msg = $("copied"), box = $("copyBox");
+  let ok = false;
+  try { if (navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(SUMMARY); ok = true; } } catch(e){}
+  if (!ok){
+    try { box.value = SUMMARY; box.hidden = false; box.select(); ok = document.execCommand("copy"); } catch(e){ ok = false; }
+  }
+  if (ok){ box.hidden = true; msg.textContent = "Copied. Paste it into your booking message."; }
+  else { box.value = SUMMARY; box.hidden = false; box.select(); msg.textContent = "Select the text below and copy it."; }
+  setTimeout(() => { msg.textContent = ""; }, 4000);
+}
+
+function init(){
+  const r = document.documentElement.style;
+  r.setProperty("--brand", BRAND.colour); r.setProperty("--accent", BRAND.accent); r.setProperty("--lplate", BRAND.lPlateRed);
+  $("lShape").setAttribute("fill", BRAND.lPlateRed);
+  $("firmName").textContent = BRAND.name; $("demoTag").hidden = !BRAND.demo;
+  buildSteps(); renderStep(false);
+}
+
+/* ============ BRAND & PRICE SETTINGS: each business edits these ============ */
+const BRAND = {
+  name: "Example School of Motoring",      // invented demo business
+  demo: true,                              // shows the "Demo" badge and demo-price note
+  colour: "#1640FF",                       // main brand colour (header, buttons)
+  accent: "#FFD60A",                       // highlight colour (call-to-action, road lines)
+  lPlateRed: "#E0242B",                    // colour of the L on the L plate
+  bookingUrl: "https://example.com/book-lesson",
+  bookingLabel: "Book your first lesson",  // main button text
+  barLabel: "Book a lesson",               // short button text in the bottom bar
+  phone: "01234 567890",                   // placeholder
+  smallprint: "Everyone learns at a different pace. This is a rough guide, not a promise.",
+};
+
+const PRICES = {                           // Demo prices only: the business sets its own.
+  hourlyManual: 37,                        // £ per hour, manual car
+  hourlyAuto: 40,                          // £ per hour, automatic car
+  blocks: [                                // block-booking discounts: buy at least `hours`, save `discount`
+    {hours: 10, discount: 0.05},           // 10+ hours: 5% off
+    {hours: 20, discount: 0.08},           // 20+ hours: 8% off
+    {hours: 30, discount: 0.10},           // 30+ hours: 10% off
+  ],
+  payAsYouGoBelow: 0.7,                    // suggest pay as you go if the top estimate is under 70% of the smallest package
+  payAsYouGoBlurb: "You probably won't need a full block. Book lessons one at a time and stop when you're ready.",
+};
+
+const PACKAGES = [                         // packages the tool can suggest. type: "block" (weekly learners) or "intensive"
+  {name: "10-hour block",     hours: 10, type: "block",     blurb: "A good start, or a top-up if you're nearly there."},
+  {name: "20-hour block",     hours: 20, type: "block",     blurb: "Steady weekly lessons with a block-booking saving."},
+  {name: "30-hour block",     hours: 30, type: "block",     blurb: "Our biggest saving, for learners starting from scratch."},
+  {name: "15-hour intensive", hours: 15, type: "intensive", blurb: "Daily lessons over about a week, for learners with some experience."},
+  {name: "30-hour intensive", hours: 30, type: "intensive", blurb: "Daily lessons over one to two weeks."},
+];
+
+const RULES = {
+  averageLessonHours: 45,                  // the instructor's own starting estimate for a new learner with no private practice (not an official figure)
+  averagePrivatePracticeHours: 22,         // not shown in the tool; kept for reference
+  showSourceNote: true,                    // show the "Based on DVSA guidance" footnote
+  sourceNote: "Starting point set by your instructor. GOV.UK says there's no minimum number of lessons you must have.",   // footnote text
+  hoursCredit: 0.85,                       // each hour of lessons already had takes this many hours off the estimate
+  rangeLow: 0.85, rangeHigh: 1.15,         // range shown either side of the middle estimate
+  roundHoursTo: 5,                         // round larger estimates to the nearest 5 hours
+  roundSmallBelow: 20,                     // below this many hours, show exact hours instead
+  minHours: 2,                             // never show fewer than this
+  transmission: {                          // factor: multiplies the typical starting hours
+    manual: {label: "Manual", sub: "Clutch and gears", factor: 1},
+    auto:   {label: "Automatic", sub: "No clutch to learn", factor: 0.85},
+  },
+  experience: {                            // factor: multiplies hours; floor: minimum hours we'd still suggest
+    none:   {label: "None yet", sub: "I've never driven", factor: 1, floor: 20},
+    few:    {label: "A few lessons", sub: "I've made a start", factor: 0.97, floor: 15},
+    lots:   {label: "Lots of lessons, but not test-ready", sub: "I need to finish off", factor: 0.92, floor: 8},
+    abroad: {label: "Passed abroad or returning driver", sub: "I've driven before", factor: 0.35, floor: 4},
+  },
+  hoursHad: {                              // hours: middle of the band, used with hoursCredit
+    "0":     {label: "None", hours: 0},
+    "1-10":  {label: "1–10 hours", hours: 5},
+    "11-25": {label: "11–25 hours", hours: 18},
+    "26-40": {label: "26–40 hours", hours: 33},
+    "40+":   {label: "More than 40 hours", hours: 45},
+  },
+  practice: {                              // factor: private practice reduces the lesson hours needed
+    no:     {label: "No", factor: 1},
+    some:   {label: "Sometimes", factor: 0.88},
+    weekly: {label: "Yes, every week", factor: 0.75},
+  },
+  pace: {                                  // phrase: wording in the result; hoursPerWeek: used for the weeks estimate; factor: adjusts hours; packageType: which PACKAGES to suggest
+    weekly:    {label: "Weekly", sub: "1–2 hours a week", phrase: "with 1–2 hours a week", hoursPerWeek: 1.5, factor: 1, packageType: "block"},
+    frequent:  {label: "2–3 times a week", sub: "About 5 hours a week", phrase: "with lessons 2–3 times a week", hoursPerWeek: 5, factor: 0.95, packageType: "block"},
+    intensive: {label: "Intensive course", sub: "Most days, over a week or two", phrase: "on an intensive course", hoursPerWeek: 20, factor: 0.9, packageType: "intensive"},
+  },
+  confidence: {                            // factor: small adjustment to hours
+    nervous:   {label: "Nervous", sub: "I'll need time to settle", factor: 1.1},
+    okay:      {label: "Okay", sub: "A bit of both", factor: 1},
+    confident: {label: "Confident", sub: "I pick things up quickly", factor: 0.93},
+  },
+  questions: {                             // question wording
+    transmission: {q: "Manual or automatic?", help: "Which kind of car do you want to learn in?", twoCol: true},
+    experience:   {q: "How much driving have you done so far?", help: "Pick the one closest to you."},
+    hoursHad:     {q: "How many hours of professional lessons have you had?", help: "With any instructor. A rough guess is fine."},
+    practice:     {q: "Can you practise with a friend or family member?", help: "In their car, between lessons."},
+    pace:         {q: "How do you want to learn?", help: "This changes how soon you could be ready."},
+    confidence:   {q: "How confident do you feel behind the wheel?", help: "Or how you think you'll feel. There's no wrong answer."},
+  },
+};
+
+const NEXT_STEPS = [                       // next-steps checklist shown with the result
+  {title: "Get your provisional driving licence", detail: "Apply for this before you start lessons."},
+  {title: "Book your first lesson", detail: "We'll check where you're at and plan your lessons."},
+  {title: "Pass your theory test", detail: "Start revising early. You'll take this before your practical test."},
+  {title: "Practise between lessons", detail: "If you can, with a friend or family member."},
+  {title: "Book your practical test", detail: "When your instructor agrees you're ready."},
+];
+/* ========================================================================== */
+
+init();
+</script>
+
+<script>
+/* Embedding support: when this tool sits inside another website (an iframe), tell that page how tall it is
+   so the frame can grow to fit. Harmless when opened on its own. */
+(function(){
+  var embedded = false; try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+  if (!embedded) return;
+  document.documentElement.classList.add("embedded");
+  document.documentElement.style.minHeight = "0"; document.body.style.minHeight = "0";
+  var last = 0;
+  function send(){ var b = document.body, cs = getComputedStyle(b), lc = b.lastElementChild, mb = lc ? parseFloat(getComputedStyle(lc).marginBottom) || 0 : 0;
+    var h = Math.ceil(b.getBoundingClientRect().height + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom) + mb);
+    if (Math.abs(h - last) < 2) return; last = h;
+    parent.postMessage({type: "tool-height", height: h}, "*"); }
+  window.addEventListener("load", send);
+  if (window.ResizeObserver) new ResizeObserver(send).observe(document.body); else setInterval(send, 500);
+  send();
+})();
+</script>
+</body>
+</html>
