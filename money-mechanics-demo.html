@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Money Mechanics Retirement Gap Planner (Demo)</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Watch money compound coin by coin, plan your retirement goal, and check how long your money will last. Educational only, not financial advice.">
+<meta name="theme-color" content="#FBF7F2">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;-webkit-text-size-adjust:100%}
+img{max-width:100%}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Open+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: three-step journey (Grow → Plan → Last) with a rocket progress track, coin grid, planner and drawdown view. */
+:root{
+  /* Coinrise, light and calm: paper off-white, deep navy text, teal for actions, gold kept for the coins. Light theme on every device. */
+  --bg:#F7F5F0; --bg2:#FFFFFF; --grid:#E2DED4; --ink:#1B2A41; --muted:#56606F;
+  --accent:#0F7C78; --accent-ink:#FFFFFF; --moon:#0F7C78; --panel:#FFFFFF;
+  --deposit:#A3ACBA; --warn:#B8430E; --simple:#3F78C0; --compound:#D9A441; --gold-text:#8A5F0C; --empty:#ECE8DE; --good:#1E7B4F;
+  --accent-soft:rgba(15,124,120,.14); --warn-soft:rgba(184,67,14,.12); --good-soft:rgba(30,123,79,.12);
+  --glow:rgba(15,124,120,.07); --card-border:rgba(15,124,120,.35); --card-tint:rgba(15,124,120,.06);
+  --shadow:0 6px 18px rgba(27,42,65,.10); --coin-glow:none; --stars:0; --star-col:#1B2A41;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Instrument Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+/* ============ BRAND SETTINGS: Money Mechanics demo ============
+   Colours sampled from sarahpoynton.com (10 Oct 2026): deep purple #240531, teal #459E93,
+   burnt orange #B0441D, yellow #DFDB21. Headline font: Oswald (close match to the site's condensed headings). */
+:root{
+  --accent:#240531; --accent-rgb:36,5,49; --accent-ink:#FFFFFF; --moon:#459E93;
+  --bg:#FAF8F6; --ink:#1A1420; --muted:#5D5566; --grid:#E6E1EA; --empty:#EEEAF0;
+  --brand-pop:#B0441D; --brand-teal:#459E93; --brand-yellow:#DFDB21;
+  --accent-soft:rgba(69,158,147,.16); --glow:rgba(69,158,147,.08);
+  --card-border:rgba(36,5,49,.30); --card-tint:rgba(69,158,147,.07);
+  --display:"Oswald","Arial Narrow",sans-serif; --body:"Open Sans",system-ui,sans-serif;
+}
+body{border-top:10px solid var(--accent)}
+/* ============================================================== */
+.demo-ribbon{grid-column:1/-1;background:var(--ink);color:#fff;font:600 .72rem/1.4 var(--body);text-align:center;padding:6px 12px;border-radius:10px;margin-bottom:10px;letter-spacing:.02em}
+.brand .logo.mm-brand{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.mm-brand .mm-name{font:700 1.45rem/1 var(--display);letter-spacing:.03em;text-transform:uppercase;color:var(--accent);padding-bottom:4px;border-bottom:3px solid var(--brand-yellow);align-self:flex-start}
+.mm-brand .mm-name b{color:var(--brand-pop);font-weight:700}
+.mm-brand small{font:600 .74rem var(--body);color:var(--brand-teal);letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+.mm-powered{font-size:.72rem;color:var(--muted);text-align:center;margin-top:6px}
+html,body{height:100%}
+[hidden]{display:none!important}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+
+body{background:var(--bg) radial-gradient(120% 60% at 85% -10%, var(--glow) 0%, transparent 60%) no-repeat;color:var(--ink);font-family:var(--body);font-size:15px;margin:0;min-height:100%}
+#sky{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+.app{position:relative;z-index:1}
+.app{min-height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;padding-inline:16px;padding-block:14px 28px;box-sizing:border-box;gap:12px}
+header{display:grid;gap:12px}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand .logo{display:flex;align-items:center;gap:10px}
+.brand svg.mark{width:34px;height:34px;flex:0 0 auto}
+.iconbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--grid);background:var(--panel);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.iconbtn svg{width:18px;height:18px}
+.journey{position:relative;padding-top:6px}
+.track{position:absolute;left:16.67%;right:16.67%;top:22px;height:3px;border-radius:3px;background:var(--grid)}
+.track .fill{position:absolute;left:0;top:0;bottom:0;width:calc(var(--step,0) * 50%);background:linear-gradient(90deg,var(--simple),var(--accent));border-radius:3px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.track .rocket{position:absolute;top:-13px;left:calc(var(--step,0) * 50%);width:28px;height:28px;transform:translateX(-50%) rotate(45deg);transition:left .6s cubic-bezier(.2,.8,.2,1);}
+.steps3{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.steps3 button{background:none;border:0;color:var(--muted);font:600 .78rem var(--body);display:flex;flex-direction:column;align-items:center;gap:22px;cursor:pointer;padding:0 0 4px}
+.steps3 .dot{width:12px;height:12px;border-radius:50%;background:var(--grid);border:2px solid var(--bg);box-shadow:0 0 0 1px var(--grid);margin-top:10px}
+.steps3 button[aria-selected="true"]{color:var(--ink)}
+.steps3 button[aria-selected="true"] .dot{background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.steps3 button.done .dot{background:var(--simple)}
+.hero h2{font:800 clamp(1.6rem,6.5vw,2.2rem)/1.05 var(--display);margin:0;letter-spacing:-.02em;text-wrap:balance}
+.hero h2 em{font-style:normal;color:var(--accent)}
+.hero p{margin:6px 0 0;color:var(--muted);font-size:.92rem;max-width:46ch}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translate(-50%,-140%);z-index:60;background:var(--accent);color:var(--accent-ink);font:800 .95rem var(--display);padding:10px 16px 10px 12px;border-radius:999px;display:flex;align-items:center;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.4);transition:transform .45s cubic-bezier(.2,1.2,.3,1),opacity .3s,visibility 0s .45s;max-width:calc(100vw - 32px);opacity:0;visibility:hidden}
+.toast.show{transform:translate(-50%,0);opacity:1;visibility:visible;transition:transform .45s cubic-bezier(.2,1.2,.3,1),opacity .2s,visibility 0s}
+.rate{display:grid;gap:4px}
+.rate .val{font:800 1.5rem var(--display);color:var(--accent);font-variant-numeric:tabular-nums}
+.rate .tag{display:inline-block;font:600 .72rem var(--body);padding:3px 9px;border-radius:999px;background:var(--grid);color:var(--ink);margin-left:6px;vertical-align:4px}
+.rate .tag.hi{background:var(--warn-soft);color:var(--warn)}
+.rate .tag.ok{background:var(--good-soft);color:var(--good)}
+.toast svg{width:22px;height:22px;flex:0 0 auto}
+@media (prefers-reduced-motion:reduce){.toast,.track .fill,.track .rocket{transition:none}}
+h1{font-family:var(--display);font-weight:800;font-size:1.25rem;margin:0;letter-spacing:-.01em;line-height:1}
+h1 small{display:block;font:500 .7rem var(--body);color:var(--muted);letter-spacing:.02em;margin-top:3px}
+h1 span{color:var(--moon)}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--grid);border-radius:999px;padding:3px}
+.tabs button{font:600 .82rem var(--body);border:0;border-radius:999px;padding:6px 12px;background:none;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.tabs button{padding:6px 10px}
+.sn{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid currentColor;font:600 .6rem var(--mono);margin-right:4px;vertical-align:1px}
+.nextbtn{width:100%;font:800 1.05rem var(--display);border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);padding:15px;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s}
+.nextbtn:active{transform:scale(.97)}
+.card{border:1px solid var(--card-border);border-radius:20px;padding:18px;background:linear-gradient(160deg,var(--card-tint),var(--panel) 45%);display:grid;gap:12px;box-shadow:var(--shadow)}
+.card h2{margin:0;font:800 1.15rem var(--display)}
+.card dl{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin:0;font-size:.86rem}
+.card dt{color:var(--muted)}
+.card dd{margin:0;font:600 .9rem var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.card dd.hi{color:var(--accent);font-size:1.05rem}
+.card .acts{display:flex;gap:8px;flex-wrap:wrap}
+.card .acts button{flex:1;min-width:140px}
+.copyfall{width:100%;box-sizing:border-box;font:.8rem var(--mono);min-height:110px;border-radius:8px;border:1px solid var(--grid);background:var(--bg);color:var(--ink);padding:8px}
+.lhead .big.warn{color:var(--warn)}
+.lrow{position:relative;height:120px;display:flex;align-items:flex-end;gap:1px}
+.lbar{flex:1;min-width:0;background:var(--simple);border-radius:1px 1px 0 0}
+.lbar.out{background:var(--warn);height:3px!important;opacity:.7}
+.phases{display:grid;gap:6px;font-size:.84rem}
+.phases div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--grid);padding-bottom:5px}
+.phases b{font-family:var(--mono);white-space:nowrap}
+.view{flex:1;display:flex;flex-direction:column;gap:10px;min-height:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--moon);outline-offset:2px}
+.stage{position:relative;border-radius:18px;overflow:hidden;background:var(--panel);border:1px solid var(--grid);backdrop-filter:blur(6px)}
+.note{background:var(--panel);border:1px solid var(--grid);border-radius:16px;padding:12px 14px;font-size:.9rem;line-height:1.5;backdrop-filter:blur(6px)}
+.note strong{color:var(--accent)}
+.note .b{color:var(--simple);font-weight:600}
+.note .g{color:var(--gold-text);font-weight:600}
+button.ctl{font:600 1rem var(--body);border-radius:999px;border:1px solid var(--grid);background:var(--panel);color:var(--ink);padding:12px 10px;cursor:pointer;transition:transform .12s, background .2s}
+button.ctl:active,.chips button:active{transform:scale(.95)}
+button.primary{font-family:var(--display);font-weight:800;font-size:1.15rem;background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:var(--shadow)}
+button:disabled{opacity:.4;cursor:default}
+.foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.74rem;color:var(--muted)}
+.foot button{background:none;border:0;color:var(--muted);font:inherit;text-decoration:underline;cursor:pointer;padding:2px}
+
+/* money */
+.chips{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.78rem;color:var(--muted)}
+.chips .grp{display:flex;gap:4px;align-items:center}
+.chips button{font:600 .8rem var(--body);border:1px solid var(--grid);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 11px;cursor:pointer;transition:transform .12s}
+.chips button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.totals{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:end}
+.year{font-family:var(--display);font-weight:800;font-size:3.2rem;line-height:.85;color:var(--accent);font-variant-numeric:tabular-nums}
+.year small{display:block;font:600 .66rem var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.tot{min-width:0}
+.tot .amt{font:600 1.5rem var(--mono);font-variant-numeric:tabular-nums}
+.tot .sub{font-size:.8rem;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.76rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.legend .ring{background:var(--compound);box-shadow:0 0 0 2px var(--simple);width:8px;height:8px;margin:1px}
+.tower{height:clamp(200px,28vh,280px);background:radial-gradient(90% 60% at 50% 0%,var(--glow),transparent 70%),var(--panel)}
+.tw{position:absolute;left:0;right:0;bottom:0;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.rows{display:flex;flex-direction:column-reverse;gap:4px;padding:8px 10px 6px}
+.yrow{display:flex;align-items:center;gap:8px;border-radius:6px;padding:1px}
+.yrow.new{outline:2px solid var(--ink);outline-offset:1px}
+.cg{display:flex;flex-wrap:wrap;width:calc(var(--cs) * 20);flex:0 0 auto;align-content:flex-end}
+.c{width:var(--cs);height:var(--cs);display:grid;place-items:center}
+.c::before{content:"";width:84%;height:84%;border-radius:50%;background:radial-gradient(circle at 32% 30%,rgba(255,255,255,.75) 0 12%,transparent 34%),currentColor;box-shadow:inset 0 -1.5px 0 rgba(0,0,0,.25)}
+.c.g::before{box-shadow:inset 0 -1.5px 0 rgba(0,0,0,.25),var(--coin-glow)}
+.c.d{color:var(--deposit)}.c.s{color:var(--simple)}.c.g{color:var(--compound)}
+.c.r::before{width:64%;height:64%;box-shadow:0 0 0 2px var(--simple)}
+.yrow.new .c{animation:pop .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.ylbl{min-width:0;font:.66rem var(--mono);color:var(--muted);line-height:1.3;font-variant-numeric:tabular-nums}
+.ylbl b{color:var(--simple);font-weight:600}
+.yrow.new .ylbl{color:var(--ink)}
+.ground{position:absolute;left:0;right:0;bottom:0;height:0;border-top:2px solid var(--muted)}
+@media (prefers-reduced-motion:reduce){.tw{transition:none}.yrow.new .c{animation:none}}
+.ledger{font:600 .86rem var(--mono);line-height:1.6;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ledger .row{display:flex;justify-content:space-between;gap:10px}
+.ledger .row span:last-child{text-align:right}
+.ledger .hl{color:var(--simple)}
+.ledger .bl{color:var(--muted)}
+.ledger .tot2{border-top:1px solid var(--grid);margin-top:4px;padding-top:4px}
+.bars{padding:10px 12px 8px}
+.bars h3{margin:0 0 6px;font:600 .72rem var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.barrow{position:relative;height:84px;display:flex;align-items:flex-end;gap:2px}
+.bar{flex:1;display:flex;flex-direction:column-reverse;min-width:0;border-radius:2px 2px 0 0;overflow:hidden;opacity:.25;transition:opacity .3s}
+.bar.on{opacity:1}
+.bar.now{outline:2px solid var(--ink);outline-offset:1px}
+.bar .bs{background:var(--deposit)}
+.bar .bg{background:var(--simple)}
+.flat{position:absolute;left:0;right:0;border-top:2px dashed var(--muted)}
+.flat span{position:absolute;right:0;bottom:2px;font:.64rem var(--mono);color:var(--muted);background:var(--panel);padding:0 3px}
+.mctl{display:grid;grid-template-columns:auto auto 1fr;gap:8px}
+.mctl .ctl{min-width:52px}
+
+/* goal */
+.gform{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.gform .f{display:flex;flex-direction:column;gap:3px;min-width:0}
+.gform .f.wide{grid-column:1/-1}
+.gform label{font-size:.74rem;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
+.gform label output{font:600 .82rem var(--mono);color:var(--ink)}
+.gform input[type=range],.mctl input[type=range]{width:100%;accent-color:var(--accent);height:26px}
+.gform input[type=number]{font:600 .95rem var(--mono);padding:7px 9px;border-radius:8px;border:1px solid var(--grid);background:var(--panel);color:var(--ink);width:100%;box-sizing:border-box}
+.gform .chk{flex-direction:row;align-items:center;gap:8px;font-size:.82rem;color:var(--ink)}
+.gform .chk input{width:18px;height:18px;accent-color:var(--accent)}
+.ans{display:grid;gap:4px}
+.ans .k{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ans .big{font-family:var(--display);font-weight:800;font-size:2.8rem;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.ans .big small{font:600 .9rem var(--body);color:var(--muted)}
+.ans .rng{font-size:.82rem;color:var(--muted)}
+.ans .rng b{color:var(--ink);font-family:var(--mono)}
+.steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.others{border:1px solid var(--grid);border-radius:10px;padding:8px 10px;background:var(--panel)}
+.others summary{cursor:pointer;font:600 .84rem var(--body);display:flex;justify-content:space-between;gap:8px}
+.others summary span{font:600 .78rem var(--mono);color:var(--accent)}
+.others .inner{margin-top:10px}
+.bnote{font-size:.74rem;color:var(--muted);margin:6px 0 0;line-height:1.4}
+.bills{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+.bills input[type=number]{padding:6px 8px;font-size:.88rem}
+.btot{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;border-top:1px solid var(--grid);margin-top:10px;padding-top:8px;font-size:.84rem}
+.btot b{font:600 .9rem var(--mono)}
+.btot b:last-child{color:var(--muted);font-weight:400}
+.sumline{display:grid;gap:4px;font-size:.88rem}
+.sumline .r{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.sumline .r b{font-family:var(--mono);white-space:nowrap}
+.sumline .head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font:800 1.05rem var(--display)}
+.sumline .head b{font:600 1.25rem var(--mono);color:var(--accent);white-space:nowrap}
+.sumline .sub{display:grid;gap:5px;margin:6px 0 2px 4px;padding-left:12px;border-left:3px solid var(--accent-soft);color:var(--muted)}
+.sumline .sub b{color:var(--ink)}
+.sumline small{color:var(--muted);font-size:.76rem}
+.gform .lab{font-size:.74rem;color:var(--muted)}
+#gSpAges.off{opacity:.4;pointer-events:none}
+.growbox{border:1px dashed var(--grid);border-radius:14px;padding:10px 12px}
+.taxbox{border:1px dashed var(--grid);border-radius:14px;padding:10px 12px}
+.taxbox .bnote b{color:var(--ink);font-family:var(--mono)}
+.chk2{display:flex;gap:8px;align-items:center;font-size:.82rem;margin-top:8px;color:var(--ink)}
+.chk2 input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
+input[type=range]:disabled{opacity:.35}
+.gform label small{display:block;font-size:.66rem;color:var(--muted);font-weight:400}
+.gform label:has(small){flex-direction:column;gap:0}
+.steps div{background:var(--panel);border:1px solid var(--grid);border-radius:10px;padding:7px 8px;min-width:0}
+.steps span{display:block;font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.steps b{font:600 .9rem var(--mono);overflow-wrap:anywhere}
+.levers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.levers div{border:1px dashed var(--grid);border-radius:10px;padding:7px 8px;font-size:.74rem;color:var(--muted);min-width:0}
+.levers b{display:block;font:600 .88rem var(--mono);color:var(--ink)}
+.levers .down{color:var(--simple)}
+.proj{padding:10px 12px 8px}
+.proj h3{margin:0 0 6px;font:600 .72rem var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.proj h3 i{font-style:normal;display:inline-flex;align-items:center;gap:4px;text-transform:none;letter-spacing:0}
+.proj h3 i::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--c)}
+.prow{position:relative;height:110px;display:flex;align-items:flex-end;gap:1px}
+.pbar{flex:1;display:flex;flex-direction:column-reverse;min-width:0}
+.pbar .pc{background:var(--deposit)}
+.pbar .pg{background:var(--simple)}
+.goalline{position:absolute;left:0;right:0;border-top:2px dashed var(--compound)}
+.goalline span{position:absolute;right:0;bottom:2px;font:600 .64rem var(--mono);color:var(--gold-text);background:var(--panel);padding:0 3px}
+.paxis{display:flex;justify-content:space-between;font:.62rem var(--mono);color:var(--muted);margin-top:3px}
+
+dialog{max-width:min(480px,calc(100vw - 32px));border:1px solid var(--grid);border-radius:20px;background:var(--bg2);color:var(--ink);padding:18px 18px 14px;line-height:1.5}
+dialog::backdrop{background:#0008}
+dialog h2{font-family:var(--display);margin:0 0 6px;font-size:1.15rem}
+dialog p,dialog li{font-size:.88rem;max-width:62ch}
+dialog ul{padding-left:18px}
+dialog a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.stack,.mark,.bar{transition:none}}
+@media (min-width:900px){
+  .app{max-width:1180px;padding-inline:32px;gap:18px}
+  header{grid-template-columns:minmax(0,1fr) minmax(420px,560px);align-items:center;column-gap:40px}
+  .view{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:18px 32px;align-items:start;align-content:start}
+  .view > .hero{grid-column:1 / -1}
+  .hero h2{font-size:2.6rem}
+  .tower{height:clamp(320px,52vh,520px)}
+  #goal .gform{background:var(--panel);border:1px solid var(--grid);border-radius:18px;padding:18px}
+}
+@media (min-width:1300px){.app{max-width:1280px}}
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="toast" id="toast" role="status" aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#1a1405"/><circle cx="12" cy="12" r="7" fill="#ffc94a"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#1a1405" font-family="sans-serif">£</text></svg><span id="toastTxt"></span></div>
+<div class="app">
+  <header>
+    <div class="demo-ribbon">Demo made for Money Mechanics by Amy Conlon · not a live page</div>
+    <div class="brand">
+      <div class="logo mm-brand"><span class="mm-name">Money <b>Mechanics</b></span><small>Retirement gap planner</small></div>
+      <button class="iconbtn" id="sound" type="button" aria-label="Sound on" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" stroke="none"/><path class="w" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/><path class="x" d="M16 9l5 6M21 9l-5 6" style="display:none"/></svg></button>
+    </div>
+    <nav class="journey" aria-label="Your journey">
+      <div class="track" aria-hidden="true"><div class="fill"></div><svg class="rocket" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2c5 3 8 9 8 15l-3 4h-10l-3-4c0-6 3-12 8-15z" style="fill:var(--panel);stroke:var(--ink);stroke-width:1.4"/><circle cx="16" cy="13" r="3" style="fill:var(--simple)"/><path d="M8 17l-4 6 5-1M24 17l4 6-5-1" style="fill:var(--accent)"/><path d="M13 22h6l-1 6h-4z" style="fill:var(--compound)"/></svg></div>
+      <div class="steps3" role="tablist">
+        <button role="tab" id="tabMoney" aria-selected="true" type="button"><span class="dot"></span>See it grow</button>
+        <button role="tab" id="tabGoal" aria-selected="false" type="button"><span class="dot"></span>Plan it</button>
+        <button role="tab" id="tabLast" aria-selected="false" type="button"><span class="dot"></span>Make it last</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- GOAL VIEW -->
+  <section class="view" id="goal" hidden>
+    <div class="hero"><h2>Find your retirement <em>gap</em></h2><p>Tell us the retirement you want. We'll work backwards to what you need to save each month.</p></div>
+    <div class="col col-a">
+    <div class="gform">
+      <div class="f"><label for="gAge">Your age now <output id="oAge"></output></label><input type="range" id="gAge" min="18" max="66" value="30"></div>
+      <div class="f"><label for="gRet">Retire at <output id="oRet"></output></label><input type="range" id="gRet" min="40" max="75" value="67"></div>
+      <div class="f wide"><span class="chips" id="gLife">The retirement you want
+        <button type="button" data-l="min">Minimum</button><button type="button" data-l="mod">Moderate</button><button type="button" data-l="com">Comfortable</button><button type="button" data-l="bills">My bills</button><button type="button" data-l="custom">Set amount</button></span>
+        <p class="bnote" id="lifeNote"></p></div>
+      <div class="f wide" id="incWrap"><label for="gInc">Total you want to spend each year <output id="oInc"></output></label><input type="range" id="gInc" min="8000" max="80000" step="500" value="25000"></div>
+      <div class="f wide taxbox" id="taxWrap">
+        <span class="chips" id="gHeld">Where will your savings be? <button type="button" data-s="0">Pension</button><button type="button" data-s="0.5">Half &amp; half</button><button type="button" data-s="1">ISA</button></span>
+        <p class="bnote" id="taxNote"></p>
+      </div>
+      <details class="f wide others" id="gBills">
+        <summary>Work it out from your bills <span id="oBills"></span></summary>
+        <p class="bnote">Monthly costs in retirement, in today's prices. These are example figures: replace them with your own.</p>
+        <div class="gform inner bills" id="billGrid"></div>
+        <div class="btot"><span>Total spending</span><b id="bMonth"></b><b id="bYear"></b></div>
+      </details>
+      <div class="f"><label for="gSaved">Main pension pot now (£)</label><input type="number" id="gSaved" inputmode="numeric" min="0" step="500" value="10000"></div>
+      <div class="f"><span class="lab" id="spLab">State Pension from age</span><span class="chips" id="gSpAges" role="group" aria-labelledby="spLab"><button type="button" data-a="66">66</button><button type="button" data-a="67">67</button><button type="button" data-a="68">68</button></span><input type="hidden" id="gSpAge" value="67"><output id="oSpAge" hidden></output></div>
+      <div class="f wide chk"><input type="checkbox" id="gSp" checked><label for="gSp" style="color:var(--ink);font-size:.82rem">Include the full new State Pension (£241.30 a week)</label></div>
+      <details class="f wide others" id="gOthers">
+        <summary>Other pensions &amp; income <span id="oOthers"></span></summary>
+        <div class="gform inner">
+          <div class="f"><label for="gPots">Other pots (£)<small>Old workplace pensions, SIPPs, ISAs</small></label><input type="number" id="gPots" inputmode="numeric" min="0" step="500" value="0"></div>
+          <div class="f"><label for="gContrib">Paying in now (£/month)<small>You + employer, all pensions</small></label><input type="number" id="gContrib" inputmode="numeric" min="0" step="10" value="0"></div>
+          <div class="f"><label for="gDb">Final salary pension (£/yr)<small>Defined benefit, today's money</small></label><input type="number" id="gDb" inputmode="numeric" min="0" step="500" value="0"></div>
+          <div class="f"><label for="gDbAge">…paid from age <output id="oDbAge"></output></label><input type="range" id="gDbAge" min="55" max="70" value="65"></div>
+          <div class="f wide"><label for="gOther">Other yearly income in retirement (£)<small>Rental income, part-time work, an annuity you already have</small></label><input type="number" id="gOther" inputmode="numeric" min="0" step="500" value="0"></div>
+        </div>
+      </details>
+      <div class="f wide rate growbox">
+        <label for="gRate">Investment growth a year</label>
+        <div><span class="val" id="oGRate"></span><span class="tag" id="gTag"></span></div>
+        <input type="range" id="gRate" min="0" max="12" step="0.5" value="6">
+        <label for="gInf" style="margin-top:6px">Inflation a year <output id="oInf"></output></label>
+        <input type="range" id="gInf" min="0" max="6" step="0.5" value="2">
+        <p class="bnote" id="gRateNote"></p>
+      </div>
+      <div class="f wide"><span class="chips" id="gMode">How should your pot work? <button type="button" data-m="wr">Keep a cushion</button><button type="button" data-m="spend">Spend it all by an age</button></span></div>
+      <div class="f wide" id="wrWrap"><span class="chips" id="gWr">Take out each year <button type="button" data-w="0.03">3%</button><button type="button" data-w="0.035">3.5%</button><button type="button" data-w="0.04">4%</button></span>
+        <p class="bnote">Taking a modest % each year aims to leave money in the pot for as long as you live.</p></div>
+      <div class="f wide" id="endWrap" hidden><label for="gEnd">Use up my pot by age <output id="oEnd"></output></label><input type="range" id="gEnd" min="75" max="115" value="100">
+        <p class="bnote" id="endNote"></p></div>
+    </div>
+
+    </div>
+    <div class="col col-b">
+    <div class="note ans" aria-live="polite">
+      <span class="k" id="gHead">To reach your goal, save about</span>
+      <div class="big" id="gMonthly">£0 <small>a month</small></div>
+      <div class="rng" id="gRange"></div>
+    </div>
+
+    <div class="note sumline" aria-live="polite">
+      <div class="head"><span>Total to spend each year</span><b id="gSpend"></b></div>
+      <div class="sub">
+        <div class="r"><span>Pensions &amp; income <small id="gIncParts"></small></span><b id="gIncome"></b></div>
+        <div class="r"><span>+ From your pot</span><b id="gGap"></b></div>
+        <div class="r"><span>− Est. income tax</span><b id="gTax"></b></div>
+      </div>
+      <small id="gSumNote"></small>
+    </div>
+
+    <div class="steps">
+      <div><span>Pot needed</span><b id="gPot"></b></div>
+      <div><span>Years to save</span><b id="gYears"></b></div>
+    </div>
+    <div class="stage proj">
+      <h3><span>Your pot, year by year</span><span><i style="--c:var(--deposit)">You put in</i> <i style="--c:var(--simple)">Growth</i></span></h3>
+      <div class="prow" id="prow"></div>
+      <div class="paxis"><span id="ax0"></span><span id="ax1"></span></div>
+    </div>
+
+    <div class="levers" id="levers"></div>
+
+    <div class="note" id="gNote" style="font-size:.84rem"></div>
+
+    <div class="card" id="rCard" aria-live="polite">
+      <h2>Your retirement plan</h2>
+      <dl id="rList"></dl>
+      <div class="acts">
+        <button class="ctl" id="rCopy" type="button">Copy my plan</button>
+        <button class="ctl primary" id="rNext" type="button">Will it last? →</button>
+      </div>
+      <textarea class="copyfall" id="rFall" readonly hidden aria-label="Plan summary to copy"></textarea>
+    </div>
+
+    <div class="foot">
+      <span>All figures in today's money. Illustrations, not guaranteed. Not financial advice.</span>
+      <span><button id="gAbout" type="button">How it works</button></span>
+    </div>
+    </div>
+  </section>
+
+  <!-- LAST VIEW -->
+  <section class="view" id="last" hidden>
+    <div class="hero"><h2>Will your money <em>last</em>?</h2><p>Play your retirement forward, year by year, and see when the pot runs low.</p></div>
+    <div class="col col-a">
+    <div class="note ans lhead" aria-live="polite">
+      <span class="k">Taking out what your plan needs each year</span>
+      <div class="big" id="lHead"></div>
+      <div class="rng" id="lSub"></div>
+    </div>
+    <div class="gform">
+      <div class="f"><label for="lPot">Pot when you retire (£)</label><input type="number" id="lPot" inputmode="numeric" min="0" step="1000"></div>
+      <div class="f"><label>&nbsp;</label><button class="ctl" id="lReset" type="button" style="padding:7px">Use my plan's pot</button></div>
+      <div class="f wide rate">
+        <label for="lRate">Growth in retirement a year</label>
+        <div><span class="val" id="oRate"></span><span class="tag" id="rateTag"></span></div>
+        <input type="range" id="lRate" min="0" max="12" step="0.5" value="4">
+        <p class="bnote" id="rateNote"></p>
+      </div>
+    </div>
+    </div>
+    <div class="col col-b">
+    <div class="stage proj">
+      <h3><span>Pot left at each age</span><span><i style="--c:var(--simple)">Money left</i> <i style="--c:var(--warn)">Run out</i></span></h3>
+      <div class="lrow" id="lrow"></div>
+      <div class="paxis"><span id="lax0"></span><span id="lax1">Age 100</span></div>
+    </div>
+    <div class="note phases" id="lPhases"></div>
+    <div class="note" id="lNote" style="font-size:.84rem"></div>
+    <button class="nextbtn" id="lBack" type="button">← Back to your plan</button>
+    <div class="foot">
+      <span>All figures in today's money. Illustrations, not guaranteed. Not financial advice.</span>
+      <span><button id="lAbout" type="button">How it works</button></span>
+    </div>
+    </div>
+  </section>
+
+  <!-- MONEY VIEW -->
+  <section class="view" id="money" hidden>
+    <div class="hero"><h2>Watch <em>£100</em> grow</h2><p>Tap Next year and see how your gains start making gains of their own.</p></div>
+    <div class="col col-a">
+    <div class="chips">
+      <span class="grp" id="kGrp"><button type="button" data-k="inv">Investments</button><button type="button" data-k="sav">Savings</button></span>
+      <span class="grp" id="rGrp"><span id="rLbl">Growth a year</span>
+      <button type="button" data-r="0.05">5%</button><button type="button" data-r="0.07">7%</button><button type="button" data-r="0.1">10%</button></span>
+    </div>
+
+    <div class="totals" aria-live="polite">
+      <div class="year"><span id="yr">0</span><small>years</small></div>
+      <div class="tot"><div class="amt" id="total">£100</div><div class="sub" id="totSub">100 × £1 coins</div></div>
+    </div>
+
+    <div class="stage tower" id="tower" role="img" aria-label="Rows of £1 coins: your original 100 coins at the bottom, with each year's new coins as a row stacked on top">
+      <div class="tw" id="tw"></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--deposit)"></i>Your £100</span>
+      <span><i style="background:var(--simple)"></i><span id="lgB">Past gains, now growing</span></span>
+      <span><i style="background:var(--compound)"></i><span id="lgG">This year's growth</span></span>
+      <span><i class="ring"></i><span id="lgR">Growth on past gains</span></span>
+    </div>
+
+    <div class="mctl">
+      <button class="ctl" id="back" type="button" aria-label="Back one year">−1</button>
+      <button class="ctl" id="play" type="button" aria-label="Play">▶</button>
+      <button class="ctl primary" id="addYear" type="button">Next year</button>
+    </div>
+
+    </div>
+    <div class="col col-b">
+    <div class="note" id="mnote" aria-live="polite"></div>
+
+    <div class="stage bars">
+      <h3><span>Added each year</span><span id="barMax"></span></h3>
+      <div class="barrow" id="barrow"></div>
+    </div>
+
+    <button class="nextbtn" id="mNext" type="button">Next: plan your retirement →</button>
+    <div class="foot">
+      <span>Example rates before inflation, fees and tax. Not a forecast or advice.</span>
+      <span><button id="mAbout" type="button">How it works</button> · <button id="mReset" type="button">Start again</button></span>
+    </div>
+    </div>
+  </section>
+
+</div>
+
+<p class="mm-powered">Powered by Coinrise</p>
+
+<dialog id="aboutM">
+  <h2>How compounding works</h2>
+  <p>You put in £100, shown as 100 £1 coins. Once a year, <b>every coin you own earns interest</b>, including coins that were themselves earned as interest.</p>
+  <ul>
+    <li><span style="color:var(--deposit)">●</span> Grey: your original 100 coins. They never change.</li>
+    <li><span style="color:var(--compound)">●</span> Gold: this year's interest, always the top row.</li>
+    <li><span style="color:var(--simple)">●</span> Blue: interest from earlier years. Once a year is over, its gold coins turn blue because they've joined your pot and start earning too.</li>
+    <li>Gold coins with a blue ring were earned by the blue coins. That's interest earning interest: compounding.</li>
+  </ul>
+  <p>Each year's new coins get their own row, stacked on top of the year before. As the blue pile grows, it earns more ringed coins each year, so every new gold row is longer than the last. Coins keep one fixed size and the stack scrolls up as it grows, so nothing ever shrinks. Coins are rounded to whole pounds; the sum below uses exact pennies.</p>
+  <p>Formula: total = £100 × (1 + rate)<sup>years</sup>, with growth added once a year.</p>
+  <h2>Savings vs investments</h2>
+  <ul>
+    <li><b>Savings:</b> the bank pays interest. It compounds when you leave the interest in the account, so next year's interest is paid on a bigger balance.</li>
+    <li><b>Investments</b> (shares, funds): there's no interest. Instead, the value of what you own goes up or down. A rise of 10% applies to the whole value, including past gains, so as long as you stay invested your gains make gains. That's compounding.</li>
+    <li><b>Dividends</b> are cash some investments pay out. Reinvesting them (accumulation funds do this automatically) keeps them compounding; taking them as cash means that part stops growing.</li>
+    <li><b>Real returns are bumpy.</b> Markets don't rise the same amount every year, and some years fall. The steady rate here is a simplified average, not a prediction.</li>
+    <li><b>Losses compound too.</b> A 50% fall needs a 100% rise just to get back to where you started. Fees work the same way: a yearly fee is taken from a growing pot, so its cost grows over time.</li>
+  </ul>
+  <p>The rates are examples only. Real investments rise and fall, returns are not steady each year, and fees, tax and inflation reduce what you keep. This is a learning tool, not financial advice.</p>
+  <form method="dialog"><button class="ctl" type="submit">Close</button></form>
+</dialog>
+
+<dialog id="aboutG">
+  <h2>How the goal planner works</h2>
+  <p>It works backwards in three steps, all in <b>today's money</b>, so £25,000 means what £25,000 buys now. You set growth before inflation and the inflation rate; the planner converts growth to <i>after</i> inflation.</p>
+  <ul>
+    <li><b>Spending goal:</b> what you want to spend each year, after tax. The planner works out the tax for you.</li>
+    <li><b>From your pot:</b> what you'd need to take out each year, on top of your pensions and income, so that after tax you can spend your goal. The full new State Pension is £241.30 a week (about £12,548 a year). Many people get less, depending on their National Insurance record, so check your forecast at <a href="https://www.gov.uk/check-state-pension" target="_blank" rel="noopener">GOV.UK</a>.</li>
+    <li><b>Pot needed (Keep a cushion):</b> the gap divided by how much you take out each year. Taking 4% is the well-known "4% rule", which comes from research using US market history, so 3.5% is used here as a more cautious default. No withdrawal rate is guaranteed to last. If you retire before State Pension age, the pot also covers the missing State Pension for those years.</li>
+    <li><b>Pot needed (Spend it all by an age):</b> just enough to cover every year's shortfall from retirement to the age you choose, with the rest growing at your retirement growth rate. Before your State Pension or final salary pension starts you take out more, and afterwards less. If you live past that age, the pot is empty.</li>
+    <li><b>Monthly saving:</b> what you'd need to save each month from now, on top of what you've already saved, assuming steady growth and monthly compounding.</li>
+  </ul>
+  <p><b>Lifestyle presets</b> use the PLSA Retirement Living Standards for one person: about £13,900 a year (Minimum), £32,700 (Moderate) and £45,400 (Comfortable). These are spending figures, not income, and they assume you own your home outright, so add rent or mortgage costs if you'll still have them.</p>
+  <p><b>Bills:</b> add up what you expect to spend each month in retirement, in today's prices. Housing often falls if a mortgage is paid off, while health, care and home repairs can rise with age. The example figures are only placeholders. For realistic yearly budgets, see the <a href="https://www.retirementlivingstandards.org.uk/" target="_blank" rel="noopener">PLSA Retirement Living Standards</a>.</p>
+  <p><b>Tax:</b> you only need to say what you want to spend; the planner estimates income tax using 2026/27 rates for England, Wales and Northern Ireland (a £12,570 Personal Allowance, 20% up to £50,270, 40% up to £125,140 and 45% above, with the allowance reduced above £100,000).</p>
+  <ul>
+    <li><b>State Pension, final salary pensions and other income</b> count as taxable income.</li>
+    <li><b>Pension pots:</b> usually 25% can be taken tax-free, up to a £268,275 lump sum allowance; the rest is taxed as income. The planner assumes you take 25% of each withdrawal tax-free.</li>
+    <li><b>ISAs:</b> money taken out of an ISA isn't taxed.</li>
+    <li><b>Pension vs ISA:</b> pensions usually get tax relief and employer contributions going in, and ISAs don't, so paying less tax later doesn't make an ISA the better choice. You can put up to £20,000 a year into ISAs (2026/27).</li>
+  </ul>
+  <p>This is a simplified estimate. It doesn't cover Scottish tax rates, tax on savings outside ISAs and pensions, or changes to tax rules, which happen often.</p>
+  <p><b>Other pensions and income:</b></p>
+  <ul>
+    <li><b>Other pots</b> (old workplace pensions, personal pensions/SIPPs, ISAs) are added to what you've already saved. The government's free <a href="https://www.gov.uk/find-pension-contact-details" target="_blank" rel="noopener">Pension Tracing Service</a> can help find old workplace pensions.</li>
+    <li><b>Paying in now</b> counts what already goes in each month from you and your employer, so the headline shows only the <i>extra</i> needed.</li>
+    <li><b>Final salary (defined benefit) pensions</b> pay a set yearly income from a set age. Enter the amount in today's money, from your latest pension statement. Many rise with inflation each year, often up to a cap; if yours doesn't, its real value will fall over time and this planner will overstate it.</li>
+    <li><b>Other income</b> such as rent or part-time work is treated as steady for the whole of retirement, which may not be realistic.</li>
+    <li>If a pension starts after you retire, the pot also covers it until it starts. This bridge is a simplified, rough amount.</li>
+  </ul>
+  <p>Your State Pension age depends on your date of birth. It's rising from 66 to 67 and may rise further, so check yours at <a href="https://www.gov.uk/state-pension-age" target="_blank" rel="noopener">GOV.UK</a>.</p>
+  <p>Paying into a pension can reduce your cost: with basic-rate tax relief, £80 from you becomes £100 in the pension. Employer contributions also count towards the monthly figure.</p>
+  <p><b>About this planner:</b> This is a free educational tool. It only uses the figures you enter, doesn't know your full circumstances, and doesn't recommend any product, provider or course of action. The value of investments can go down as well as up, and you could get back less than you put in.</p>
+  <p>Real returns go up and down and are never guaranteed, which is why the range matters more than any single number. This is an educational tool, not financial advice. For a personal plan, speak to a regulated financial adviser, or use free guidance from <a href="https://www.moneyhelper.org.uk/en/pensions-and-retirement" target="_blank" rel="noopener">MoneyHelper</a>.</p>
+  <form method="dialog"><button class="ctl" type="submit">Close</button></form>
+</dialog>
+
+<dialog id="aboutL">
+  <h2>Will it last?</h2>
+  <p>This takes the pot from your plan and plays retirement forward one year at a time, in today's money.</p>
+  <ul>
+    <li>Each year you take out what you need minus the pensions and income being paid that year. Before your State Pension or final salary pension starts, you take out more; once they start, you take out less.</li>
+    <li>What's left grows at the rate you choose with the slider (0–12% a year). The planner takes off the inflation rate you set in Plan it, because everything is in today's money: if investments grow 8% in a year when prices rise 3%, that's about 5% after inflation. For reference, world shares returned about 5.2% a year after inflation from 1900 to 2024, and bonds about 1.7% (<a href="https://www.jbs.cam.ac.uk/2025/report-stocks-have-far-outperformed-over-the-past-125-years/" target="_blank" rel="noopener">UBS Global Investment Returns Yearbook 2025</a>).</li>
+    <li>Real returns go up and down, and a run of bad years early in retirement can make money run out sooner than an average suggests.</li>
+    <li>It runs to age 100 (or later if you chose to spend it all by a later age). Many people live into their 90s, so it's worth planning for a long retirement.</li>
+    <li>It doesn't include tax on withdrawals beyond what your income goal already allows for, care costs, or one-off spending.</li>
+  </ul>
+  <p>This is an educational tool, not financial advice. For help with your own retirement, see free guidance from <a href="https://www.moneyhelper.org.uk/en/pensions-and-retirement" target="_blank" rel="noopener">MoneyHelper</a>, including Pension Wise appointments if you're 50 or over with a defined contribution pension.</p>
+  <form method="dialog"><button class="ctl" type="submit">Close</button></form>
+</dialog>
+
+<script>if (!location.hash) history.replaceState(null, "", "#goal");</script>
+<script>
+const $ = id => document.getElementById(id);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const gbp = (v, p) => "£" + (p ? v.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}) : Math.round(v).toLocaleString("en-GB"));
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- fun layer: sky, sound, haptics, coin bursts, toasts ---------- */
+const sky = $("sky"), sctx = sky.getContext("2d"), fx = $("fx"), fctx = fx.getContext("2d");
+let stars = [], parts = [];
+function sizeCanvas(c, ctx){ const d = devicePixelRatio || 1; c.width = innerWidth * d; c.height = innerHeight * d; ctx.setTransform(d,0,0,d,0,0); }
+function initSky(){
+  sizeCanvas(sky, sctx); sizeCanvas(fx, fctx);
+  const n = Math.round(innerWidth * innerHeight / 9000);
+  stars = Array.from({length:n}, () => ({x:Math.random()*innerWidth, y:Math.random()*innerHeight, r:Math.random()*1.3+.3, p:Math.random()*6.28, s:.4+Math.random()}));
+}
+let starOn = 0, starCol = "#fff";
+function readSky(){ starOn = +cssv("--stars") || 0; starCol = cssv("--star-col") || "#fff"; }
+readSky(); try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readSky); } catch {}
+function drawSky(t){
+  if (!starOn){ sctx.clearRect(0,0,innerWidth,innerHeight); return; }
+  sctx.clearRect(0,0,innerWidth,innerHeight);
+  for (const st of stars){
+    const a = reduce ? .7 : .45 + .45 * Math.sin(st.p + t/1000*st.s);
+    sctx.globalAlpha = a * starOn; sctx.fillStyle = starCol;
+    sctx.beginPath(); sctx.arc(st.x, st.y, st.r, 0, 6.29); sctx.fill();
+  }
+  sctx.globalAlpha = 1;
+}
+function tick(t){
+  drawSky(t);
+  fctx.clearRect(0,0,innerWidth,innerHeight);
+  parts = parts.filter(p => p.life > 0);
+  for (const p of parts){
+    p.vy += .35; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life--;
+    fctx.save(); fctx.translate(p.x, p.y); fctx.scale(Math.cos(p.rot), 1);
+    fctx.globalAlpha = Math.min(1, p.life / 25);
+    fctx.fillStyle = p.c; fctx.beginPath(); fctx.arc(0, 0, p.r, 0, 6.29); fctx.fill();
+    fctx.fillStyle = "rgba(255,255,255,.6)"; fctx.beginPath(); fctx.arc(-p.r*.3, -p.r*.3, p.r*.3, 0, 6.29); fctx.fill();
+    fctx.restore();
+  }
+  if (!reduce || parts.length) requestAnimationFrame(tick);
+}
+initSky(); addEventListener("resize", initSky); requestAnimationFrame(tick);
+function burst(el, n = 36){
+  if (reduce) return;
+  const r = el ? el.getBoundingClientRect() : {left:innerWidth/2, top:innerHeight/3, width:0, height:0};
+  const x = r.left + r.width/2, y = r.top + r.height/2;
+  for (let i = 0; i < n; i++){
+    const a = Math.random()*Math.PI*2, v = 4 + Math.random()*7;
+    parts.push({x, y, vx:Math.cos(a)*v, vy:Math.sin(a)*v - 6, r:4 + Math.random()*4, rot:Math.random()*6, vr:.2 + Math.random()*.3,
+      life:55 + Math.random()*30, c:["#D9A441","#E8B65A","#3F78C0","#3FB5AE"][i % 4]});
+  }
+  if (reduce) requestAnimationFrame(tick);
+}
+let SOUND = true;
+try { SOUND = localStorage.getItem("mm-demo-sound") !== "off"; } catch {}
+let actx = null;
+function tone(freq, dur = .12, type = "triangle", vol = .12, when = 0){
+  if (!SOUND) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime + when, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + .02);
+  } catch {}
+}
+const sfx = {
+  coin(k = 0){ tone(1320 + k*30, .09, "square", .05); tone(1980 + k*40, .16, "triangle", .07, .05); },
+  tap(){ tone(660, .05, "sine", .05); },
+  chime(){ [523, 659, 784, 1047].forEach((f, i) => tone(f, .35, "triangle", .09, i*.09)); },
+  low(){ tone(330, .25, "sine", .08); tone(247, .35, "sine", .08, .12); }
+};
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} };
+function setSoundUI(){
+  const b = $("sound"); b.setAttribute("aria-pressed", SOUND); b.setAttribute("aria-label", SOUND ? "Sound on" : "Sound off");
+  b.querySelector(".w").style.display = SOUND ? "" : "none"; b.querySelector(".x").style.display = SOUND ? "none" : "";
+}
+$("sound").onclick = () => { SOUND = !SOUND; try { localStorage.setItem("mm-demo-sound", SOUND ? "on" : "off"); } catch {} setSoundUI(); sfx.tap(); };
+setSoundUI();
+let toastT = null;
+function toast(msg){
+  $("toastTxt").textContent = msg; const t = $("toast");
+  t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600);
+}
+// Smoothly count a number up or down inside an element.
+function countTo(el, to, fmt){
+  const from = +el.dataset.v || 0; el.dataset.v = to;
+  if (reduce || !isFinite(to) || !isFinite(from)) { el.textContent = fmt(to); return; }
+  const t0 = performance.now(), d = 450;
+  const step = now => { const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = fmt(from + (to - from) * e); if (k < 1 && +el.dataset.v === to) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+document.addEventListener("click", e => { if (e.target.closest(".chips button")) { sfx.tap(); buzz(8); } });
+
+/* ---------- tabs ---------- */
+const TABS = {money:"tabMoney", goal:"tabGoal", last:"tabLast"};
+const ORDER = ["money","goal","last"];
+function showTab(which){
+  const idx = ORDER.indexOf(which);
+  for (const [v, t] of Object.entries(TABS)){ $(v).hidden = v !== which; $(t).setAttribute("aria-selected", v === which); $(t).classList.toggle("done", ORDER.indexOf(v) < idx); }
+  document.querySelector(".journey").style.setProperty("--step", idx);
+  if (which === "money") drawMoney(false);
+  else if (which === "last") drawLast();
+  else drawGoal();
+  window.scrollTo(0, 0);
+}
+$("tabGoal").onclick = () => showTab("goal");
+$("tabMoney").onclick = () => showTab("money");
+$("tabLast").onclick = () => showTab("last");
+$("mNext").onclick = () => { sfx.chime(); showTab("goal"); };
+$("rNext").onclick = () => { sfx.chime(); showTab("last"); };
+$("lBack").onclick = () => showTab("goal");
+
+/* ---------- goal ---------- */
+// Example monthly bills in retirement (illustrative only, not benchmarks).
+const BILLS = [
+  ["bHouse","Rent or mortgage",0],["bCouncil","Council tax",150],["bEnergy","Gas & electricity",150],["bWater","Water",45],
+  ["bFood","Food & groceries",350],["bTrans","Transport & car",150],["bIns","Insurance",60],["bComms","Phone, broadband & TV",70],
+  ["bHealth","Health & personal care",50],["bFun","Holidays & leisure",250],["bGifts","Gifts & family",60],["bOther","Repairs & one-offs",100]
+];
+$("billGrid").innerHTML = BILLS.map(([id, label, v]) =>
+  `<div class="f"><label for="${id}">${label}</label><input type="number" id="${id}" inputmode="numeric" min="0" step="10" value="${v}"></div>`).join("");
+// Gross income needed to take home `net`, using 2026/27 bands for England, Wales & NI
+// (Personal Allowance £12,570; 20% to £50,270; 40% above). Ignores the allowance taper above £100,000.
+const PA = 12570, BASIC_TOP = 50270;
+// PLSA Retirement Living Standards, one person, yearly spending (homeowner, no rent/mortgage).
+const PLSA = {min:13900, mod:32700, com:45400};
+const LIFE_NAME = {min:"Minimum", mod:"Moderate", com:"Comfortable", bills:"Based on my bills", custom:"Set amount"};
+let LIFE = "mod";
+$("gLife").onclick = e => { const b = e.target.closest("button"); if (!b) return; LIFE = b.dataset.l; if (LIFE === "bills") $("gBills").open = true; drawGoal(); };
+// Income tax, 2026/27, England, Wales & NI: £12,570 Personal Allowance (tapered by £1 per £2 above £100,000),
+// 20% on the next £37,700, 40% up to £125,140, 45% above.
+function incomeTax(x){
+  const pa = x > 100000 ? Math.max(0, PA - (x - 100000) / 2) : PA;
+  const t = Math.max(0, x - pa), basic = BASIC_TOP - PA, higherTop = 125140 - pa;
+  return Math.min(t, basic) * .2 + Math.max(0, Math.min(t, higherTop) - basic) * .4 + Math.max(0, t - higherTop) * .45;
+}
+const LSA = 268275;          // lump sum allowance: most you can usually take tax-free from pensions
+let HELD = 0;                // share of savings in ISAs (0 = all pension, 1 = all ISA)
+$("gHeld").onclick = e => { const b = e.target.closest("button"); if (!b) return; HELD = +b.dataset.s; drawGoal(); };
+// Taxable part of a pot withdrawal: ISA money is tax-free; pension money is usually 25% tax-free, the rest taxed.
+const taxablePart = (w, o) => w * (1 - o.s) * (1 - o.tf);
+// How much to take from the pot at this age so that, after income tax, you can spend o.inc.
+function drawFor(o, age){
+  const g = incomeAt(o, age), netOf = w => g + w - incomeTax(g + taxablePart(w, o));
+  if (netOf(0) >= o.inc) return 0;
+  let lo = 0, hi = o.inc * 3 + 1000;
+  for (let i = 0; i < 50; i++){ const mid = (lo + hi) / 2; if (netOf(mid) < o.inc) lo = mid; else hi = mid; }
+  return hi;
+}
+const taxAt = (o, age, w) => incomeTax(incomeAt(o, age) + taxablePart(w, o));
+// Tax-free share of pension withdrawals: 25%, unless 25% of the pension pot would exceed the lump sum allowance.
+const tfFor = (pot, s) => { const pp = pot * (1 - s); return pp > 0 ? Math.min(.25, LSA / pp) : .25; };
+const SP_YEAR = 241.30 * 52;   // full new State Pension, £241.30 a week
+let WR = 0.035, NOM = 0.06, INF = 0.02, LNOM = 0.04;
+// Everything is planned in today's money, so growth is converted to "after inflation".
+const real = (n, i) => (1 + n) / (1 + i) - 1;
+let G = real(NOM, INF);
+function rateTag(el, r){
+  const p = r * 100;
+  if (p <= 3){ el.textContent = "Cautious"; el.className = "tag ok"; }
+  else if (p <= 5.5){ el.textContent = "Close to long-run average"; el.className = "tag"; }
+  else { el.textContent = "Optimistic"; el.className = "tag hi"; }
+}
+const pct1 = r => (+(r * 100).toFixed(1)) + "%";
+const gv = id => +$(id).value;
+function monthlyNeeded(pot, saved, years, g){
+  if (years <= 0) return pot > saved ? Infinity : 0;
+  const rm = Math.pow(1 + g, 1/12) - 1, N = years * 12;
+  const fvSaved = saved * Math.pow(1 + g, years);
+  const short = pot - fvSaved;
+  if (short <= 0) return 0;
+  return rm === 0 ? short / N : short * rm / (Math.pow(1 + rm, N) - 1);
+}
+// Pot that runs to exactly zero by o.end: today's value of every year's withdrawal,
+// taking each year's pensions into account and growing the rest at o.lg (after inflation).
+function spendPot(o){
+  let pv = 0;
+  for (let age = o.ret; age <= o.end; age++) pv += drawFor(o, age) / Math.pow(1 + o.lg, age - o.ret);
+  return pv;
+}
+let GMODE = "wr";
+$("gMode").onclick = e => { const b = e.target.closest("button"); if (!b) return; GMODE = b.dataset.m; drawGoal(); };
+function plan(o){
+  // Guaranteed-style income (before tax): State Pension, defined benefit pension, other income.
+  const income = (o.useSp ? SP_YEAR : 0) + o.db + o.other;
+  // Once every pension has started, withdrawals settle to a steady amount.
+  const steady = Math.max(o.ret, o.useSp ? o.spAge : 0, o.db > 0 ? o.dbAge : 0);
+  let tf = .25, pot = 0, gap = 0, bridge = 0;
+  for (let k = 0; k < 4; k++){          // tax-free share depends on pot size, so settle it in a few passes
+    const oo = {...o, tf};
+    gap = drawFor(oo, steady);
+    bridge = 0;
+    for (let age = o.ret; age < steady; age++) bridge += Math.max(0, drawFor(oo, age) - gap);
+    pot = o.mode === "spend" ? spendPot(oo) : gap / o.wr + bridge;
+    tf = tfFor(pot, o.s);
+  }
+  const oo = {...o, tf};
+  const tax = taxAt(oo, steady, gap);
+  const years = o.ret - o.age;
+  const total = monthlyNeeded(pot, o.saved, years, o.g);
+  return {income, gap, bridge, pot, years, total, tf, tax, m: Math.max(0, total - o.contrib)};
+}
+const money = v => v === Infinity ? "n/a" : "£" + Math.round(v).toLocaleString("en-GB");
+const kfmt = v => v >= 1e6 ? "£" + (+(v/1e6).toFixed(2)) + "m" : money(v);
+
+function drawGoal(){
+  const ageEl = $("gAge"), retEl = $("gRet");
+  if (+retEl.value <= +ageEl.value) retEl.value = Math.min(75, +ageEl.value + 1);
+  const num = id => Math.max(0, +$(id).value || 0);
+  const billMonth = BILLS.reduce((t, [id]) => t + num(id), 0), billYear = billMonth * 12;
+  const custom = LIFE === "custom";
+  const spend = custom ? gv("gInc") : LIFE === "bills" ? billYear : PLSA[LIFE];
+  const incGoal = Math.round(spend);
+  $("bMonth").textContent = money(billMonth) + "/mo"; $("bYear").textContent = money(billYear) + "/yr";
+  $("oBills").textContent = LIFE === "bills" ? "in use" : money(billYear) + "/yr";
+  $("gLife").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l === LIFE));
+  $("incWrap").hidden = !custom;
+  $("gHeld").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.s === HELD));
+  $("lifeNote").textContent = custom ? "Your total spending for the year, in today's money. Your State Pension and other pensions count towards it, and we work out any tax for you."
+    : LIFE === "bills" ? `Your bills come to ${money(billYear)} a year. Edit them in "Work it out from your bills" below.`
+    : `${LIFE_NAME[LIFE]} lifestyle: about ${money(spend)} a year of spending for one person (PLSA Retirement Living Standards). Assumes you own your home outright. Your State Pension and other pensions count towards this.`;
+  const o = {age:gv("gAge"), ret:gv("gRet"), inc:incGoal, saved:num("gSaved") + num("gPots"),
+             spAge:gv("gSpAge"), useSp:$("gSp").checked, g:G, wr:WR,
+             mode:GMODE, end:Math.max(gv("gEnd"), gv("gRet") + 1), lg:LG,
+             contrib:num("gContrib"), db:num("gDb"), dbAge:gv("gDbAge"), other:num("gOther"), s:HELD};
+  $("oDbAge").textContent = o.dbAge;
+  const extras = [o.saved - num("gSaved") ? "pots" : "", o.contrib ? "paying in" : "", o.db ? "final salary" : "", o.other ? "income" : ""].filter(Boolean);
+  $("oOthers").textContent = extras.length ? extras.join(", ") : "none added";
+  $("oAge").textContent = o.age; $("oRet").textContent = o.ret; $("oSpAge").textContent = o.spAge;
+  $("oInc").textContent = money(o.inc);
+  $("gSpAges").classList.toggle("off", !o.useSp);
+  $("gSpAges").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.a === o.spAge));
+  $("gRate").value = +(NOM*100).toFixed(1); $("gInf").value = +(INF*100).toFixed(1);
+  $("oGRate").textContent = pct1(NOM) + " a year"; $("oInf").textContent = pct1(INF);
+  rateTag($("gTag"), G);
+  $("gRateNote").innerHTML = `With ${pct1(INF)} inflation, ${pct1(NOM)} growth is about <b>${pct1(G)} a year after inflation</b>. The planner uses that figure, because all amounts are in today's money. ` +
+    (G > 0.055 ? `That's optimistic: world shares averaged about 5.2% a year after inflation from 1900 to 2024 (UBS Global Investment Returns Yearbook 2025), and returns are never steady or guaranteed.` : `For reference, world shares averaged about 5.2% a year after inflation from 1900 to 2024 (UBS Global Investment Returns Yearbook 2025). Past returns don't guarantee future ones.`);
+  $("gWr").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.w === WR));
+  $("gMode").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === GMODE));
+  $("wrWrap").hidden = GMODE !== "wr"; $("endWrap").hidden = GMODE !== "spend";
+  $("oEnd").textContent = o.end;
+  $("endNote").innerHTML = `Your pot is sized to run out at ${o.end}, assuming ${pct1(LNOM)} growth a year in retirement (change it in Make it last). If you live longer, you'd rely on your State Pension and other pensions alone, so many people choose an age well past their life expectancy.`;
+
+  const p = plan(o);
+  $("gHead").textContent = o.contrib > 0
+    ? (p.m > 0 ? `On top of the ${money(o.contrib)} a month you pay in now, save about` : `What you pay in now looks enough. Extra needed:`)
+    : "To reach your goal, save about";
+  if (!$("gNum")) $("gMonthly").innerHTML = `<span id="gNum"></span> <small id="gPer"></small>`;
+  countTo($("gNum"), p.m, money);
+  $("gPer").textContent = (o.contrib > 0 ? "more " : "") + "a month";
+  if (p.m === 0 && !wasOnTrack && !$("goal").hidden){ toast("On track, on these assumptions"); sfx.chime(); burst($("gMonthly")); }
+  wasOnTrack = p.m === 0;
+  $("gIncome").textContent = money(p.income);
+  $("gSpend").textContent = money(p.income + p.gap - p.tax);
+  $("gTax").textContent = money(p.tax);
+  const steadyAge = Math.max(o.ret, o.useSp ? o.spAge : 0, o.db > 0 ? o.dbAge : 0);
+  const incParts = [o.useSp ? "State Pension" : "", o.db ? "final salary pension" : "", o.other ? "other income" : ""].filter(Boolean).join(", ") || "none added";
+  $("gIncParts").textContent = "(" + incParts + ")";
+  $("gSumNote").textContent = `Made up of the amounts above, from age ${steadyAge} once all your pensions have started.${steadyAge > o.ret ? " Before then, more comes from your pot." : ""}`;
+  const pAll = HELD === 0 ? p : plan({...o, s:0}), iAll = HELD === 1 ? p : plan({...o, s:1});
+  const heldName = {0:"in a pension", 0.5:"split between a pension and an ISA", 1:"in an ISA"}[HELD];
+  $("taxNote").innerHTML = `With your savings ${heldName}, we estimate about <b>${money(p.tax)}</b> a year of income tax once all your pensions have started, so you'd take <b>${money(p.gap)}</b> a year from your pot to spend ${money(o.inc)}. ` +
+    `For comparison: all in a pension <b>${money(pAll.tax)}</b>/yr, all in an ISA <b>${money(iAll.tax)}</b>/yr. ` +
+    `Not sure? The Pension setting gives the most cautious estimate, because it assumes the most tax. Paying less tax later doesn't automatically make an ISA the better choice: pensions usually get tax relief and employer money going in.`;
+  const lo = plan({...o, g:real(NOM + 0.02, INF)}).m, hi = plan({...o, g:real(Math.max(0, NOM - 0.02), INF)}).m;
+  $("gRange").innerHTML = p.m === 0
+    ? `On these assumptions you look on track at ${pct1(NOM)} growth, with what you've saved and pay in now. Try a lower growth rate to test it.`
+    : `Between <b>${money(lo)}</b> (if growth is ${pct1(NOM + 0.02)}) and <b>${money(hi)}</b> (if ${pct1(Math.max(0, NOM - 0.02))}) a month.`;
+  $("gGap").textContent = money(p.gap);
+  $("gPot").textContent = kfmt(p.pot);
+  $("gYears").textContent = p.years;
+
+  // projection with the middle monthly amount
+  const row = $("prow"); row.innerHTML = "";
+  const rm = Math.pow(1 + G, 1/12) - 1;
+  const pts = [];
+  for (let t = 0; t <= p.years; t++){
+    const fvS = o.saved * Math.pow(1 + G, t);
+    const M = p.m + o.contrib;
+    const fvM = M === 0 ? 0 : (rm === 0 ? M * 12 * t : M * (Math.pow(1 + rm, 12 * t) - 1) / rm);
+    const put = o.saved + M * 12 * t;
+    pts.push({tot: fvS + fvM, put});
+  }
+  const top = Math.max(p.pot, pts[pts.length - 1].tot) * 1.08 || 1, H = 110;
+  pts.forEach(pt => {
+    const b = document.createElement("div"); b.className = "pbar";
+    const put = Math.min(pt.put, pt.tot);
+    b.innerHTML = `<div class="pc" style="height:${put / top * H}px"></div><div class="pg" style="height:${(pt.tot - put) / top * H}px"></div>`;
+    row.appendChild(b);
+  });
+  const gl = document.createElement("div"); gl.className = "goalline";
+  gl.style.bottom = (p.pot / top * H) + "px"; gl.innerHTML = `<span><svg viewBox="0 0 12 12" width="11" height="11" style="vertical-align:-1px"><circle cx="6" cy="6" r="5" fill="#ffc94a"/><circle cx="6" cy="6" r="3.2" fill="none" stroke="#7a5a12" stroke-width="1"/></svg> Goal ${kfmt(p.pot)}</span>`;
+  row.appendChild(gl);
+  $("ax0").textContent = "Age " + o.age; $("ax1").textContent = "Age " + o.ret;
+  const last = pts[pts.length - 1], putTotal = Math.min(last.put, last.tot);
+
+  // levers
+  const lev = [
+    ["Retire 2 years later", o.ret + 2 <= 75 ? plan({...o, ret:o.ret + 2}).m : null],
+    ["Spend £2,500 less a year", plan({...o, inc:Math.max(0, o.inc - 2500)}).m],
+    [`If you'd started at ${Math.max(18, o.age - 5)}`, o.age > 18 ? plan({...o, age:Math.max(18, o.age - 5)}).m : null]
+  ];
+  $("levers").innerHTML = lev.map(([t, v]) => v === null ? `<div>${t}<b>n/a</b></div>`
+    : `<div>${t}<b class="${v < p.m ? "down" : ""}">${money(v)}/mo</b></div>`).join("");
+
+  const relief = p.m * 0.8;
+  $("gNote").innerHTML = p.m > 0 || o.contrib > 0
+    ? `By ${o.ret} you'd have paid in about <strong>${money(putTotal)}</strong>; growth adds the other <strong>${money(last.tot - putTotal)}</strong>. ${p.m > 0 && HELD < 1 ? `In a pension with basic-rate tax relief, an extra ${money(p.m)} a month would cost you about ${money(relief)} from take-home pay.` : ""}${HELD > 0 && (p.m + o.contrib) * 12 * HELD > 20000 ? ` Heads up: that's more than the £20,000 a year you can put into ISAs (2026/27 allowance).` : ""}${p.income > 0 ? ` Your pensions and other income bring in ${money(p.income)} a year before tax.` : ""}`
+    : `At this growth rate, what you've saved already covers the goal. Try a lower growth rate to test this.`;
+
+  PLAN = {o:{...o, tf:p.tf}, p, potAtRet: Math.max(p.pot, last.tot)};
+  if (!lPotEdited) $("lPot").value = Math.round(PLAN.potAtRet);
+  const dd = drawdown(PLAN.o, PLAN.potAtRet, LG);
+  const rows = [
+    ["Lifestyle", LIFE_NAME[LIFE]],
+    ["Total spending goal", money(o.inc) + " a year (after tax)"],
+    ["Savings held", {0:"Pension", 0.5:"Half pension, half ISA", 1:"ISA"}[HELD]],
+    ["Est. tax in retirement", money(p.tax) + " a year"],
+    ["Retire at", o.ret],
+    [o.contrib > 0 ? "Save each month (extra)" : "Save each month", money(p.m), true],
+    ["Pot at retirement", kfmt(PLAN.potAtRet)],
+    ["Pensions & other income", money(p.income) + " a year"],
+    ["Money lasts until", dd.outAge ? "about age " + dd.outAge : GMODE === "spend" ? "age " + o.end + " (spent by then)" : "beyond 100", true]
+  ];
+  $("rList").innerHTML = rows.map(([k, v, hi]) => `<dt>${k}</dt><dd${hi ? ' class="hi"' : ""}>${v}</dd>`).join("");
+  SUMMARY = `My retirement plan (Money Mechanics planner)\n` + rows.map(([k, v]) => `${k}: ${v}`).join("\n") +
+    `\nAssumes ${pct1(NOM)} growth a year while saving and ${pct1(LNOM)} in retirement, with ${pct1(INF)} inflation. All in today's money. An illustration, not a guarantee or financial advice.`;
+}
+let PLAN = null, SUMMARY = "", lPotEdited = false, LG = real(0.04, 0.02), wasOnTrack = false, lastLasts = null;
+$("rCopy").onclick = async () => {
+  const b = $("rCopy");
+  try { await navigator.clipboard.writeText(SUMMARY); b.textContent = "Copied"; $("rFall").hidden = true; sfx.coin(4); buzz(10); }
+  catch { const t = $("rFall"); t.value = SUMMARY; t.hidden = false; t.select(); b.textContent = "Select and copy below"; }
+  setTimeout(() => b.textContent = "Copy my plan", 2500);
+};
+
+/* ---------- will it last ---------- */
+function incomeAt(o, age){
+  return (o.useSp && age >= o.spAge ? SP_YEAR : 0) + (age >= o.dbAge ? o.db : 0) + o.other;
+}
+function drawdown(o, pot, g){
+  const rows = []; let outAge = null;
+  const endAge = Math.max(100, o.mode === "spend" ? o.end : 100);
+  for (let age = o.ret; age <= endAge; age++){
+    const w = drawFor(o, age);
+    rows.push({age, pot: Math.max(0, pot), w});
+    if (pot < w - 1 && outAge === null && w > 0) outAge = age;   // £1 tolerance for rounding
+    pot = (pot - w) * (1 + g);
+  }
+  return {rows, outAge, left: Math.max(0, pot)};
+}
+function drawLast(){
+  if (!PLAN) drawGoal();
+  const o = {...PLAN.o};
+  const pot = Math.max(0, +$("lPot").value || 0);
+  o.tf = tfFor(pot, o.s);
+  $("lRate").value = +(LNOM * 100).toFixed(1); $("oRate").textContent = pct1(LNOM) + " a year";
+  rateTag($("rateTag"), LG);
+  $("rateNote").textContent = `With ${pct1(INF)} inflation (set in Plan it), that's about ${pct1(LG)} a year after inflation. ` + (LG > 0.055
+    ? `That's above what world shares have averaged after inflation: about 5.2% a year from 1900 to 2024 (UBS Global Investment Returns Yearbook 2025). Bonds averaged 1.7%. Most retirees hold a mix of shares and bonds. Use high rates to explore, not to plan.`
+    : `For reference: from 1900 to 2024, world shares returned about 5.2% a year after inflation and bonds about 1.7% (UBS Global Investment Returns Yearbook 2025). Past returns don't guarantee future ones.`);
+  const dd = drawdown(o, pot, LG);
+  const end = dd.rows[dd.rows.length - 1];
+  const head = $("lHead");
+  head.classList.toggle("warn", !!dd.outAge);
+  const lasts = !dd.outAge;
+  if (lasts !== lastLasts && !$("last").hidden){
+    if (lasts){ sfx.chime(); burst(head); buzz([15,40,15]); } else { sfx.low(); buzz(40); }
+  }
+  lastLasts = lasts;
+  head.innerHTML = dd.outAge ? `Runs out around age ${dd.outAge}` : (o.mode === "spend" && dd.left < 1000 ? `Lasts to age ${o.end}, as planned` : `Lasts beyond age ${end.age}`);
+  $("lSub").innerHTML = dd.outAge
+    ? `From ${kfmt(pot)} at ${o.ret}. Try a higher pot, a later retirement, or a smaller spending goal in your plan.`
+    : o.mode === "spend" && dd.left < 1000
+      ? `From ${kfmt(pot)} at ${o.ret}, spending it all by ${o.end}. After that you'd have only your State Pension and other pensions.`
+      : `From ${kfmt(pot)} at ${o.ret}, with about <b>${kfmt(dd.left)}</b> still left after ${end.age}.`;
+  const row = $("lrow"); row.innerHTML = "";
+  const top = Math.max(...dd.rows.map(r => r.pot), 1) * 1.05;
+  dd.rows.forEach(r => {
+    const b = document.createElement("div");
+    const out = dd.outAge !== null && r.age >= dd.outAge;
+    b.className = "lbar" + (out ? " out" : "");
+    b.style.height = (r.pot / top * 120) + "px";
+    b.title = `Age ${r.age}: ${money(r.pot)}`;
+    row.appendChild(b);
+  });
+  $("lax0").textContent = "Age " + o.ret; $("lax1").textContent = "Age " + end.age;
+  // phases where the yearly withdrawal changes
+  const phases = [];
+  dd.rows.forEach((r, i) => { if (i === 0 || r.w !== dd.rows[i-1].w) phases.push({from:r.age, w:r.w, inc:incomeAt(o, r.age)}); });
+  $("lPhases").innerHTML = phases.map((ph, i) => {
+    const to = i < phases.length - 1 ? phases[i+1].from - 1 : end.age;
+    return `<div><span>Age ${ph.from}${to > ph.from ? "–" + to : ""}: pensions &amp; income ${money(ph.inc)}/yr</span><b>take out ${money(ph.w)}/yr</b></div>`;
+  }).join("");
+  $("lNote").innerHTML = `Each year you take out enough to spend ${money(o.inc)} after any income tax, on top of whatever pensions and income are being paid that year. Real returns are uneven: a few bad years early in retirement can make money run out sooner than this steady average shows.`;
+}
+$("lPot").addEventListener("input", () => { lPotEdited = true; drawLast(); });
+$("lReset").onclick = () => { lPotEdited = false; $("lPot").value = Math.round(PLAN.potAtRet); drawLast(); };
+$("lRate").addEventListener("input", e => { LNOM = +e.target.value / 100; LG = real(LNOM, INF); drawGoal(); drawLast(); });
+$("lAbout").onclick = () => $("aboutL").showModal();
+$("gSpAges").onclick = e => { const b = e.target.closest("button"); if (!b) return; $("gSpAge").value = b.dataset.a; drawGoal(); };
+["gEnd","gAge","gRet","gInc","gSaved","gSp","gPots","gContrib","gDb","gDbAge","gOther", ...BILLS.map(b => b[0])].forEach(id => $(id).addEventListener("input", drawGoal));
+$("gRate").addEventListener("input", e => { NOM = +e.target.value / 100; G = real(NOM, INF); drawGoal(); });
+$("gInf").addEventListener("input", e => { INF = +e.target.value / 100; G = real(NOM, INF); LG = real(LNOM, INF); drawGoal(); });
+$("gWr").onclick = e => { const b = e.target.closest("button"); if (!b) return; WR = +b.dataset.w; drawGoal(); };
+$("gAbout").onclick = () => $("aboutG").showModal();
+
+/* ---------- money ---------- */
+let KIND = "inv";
+const W = {
+  inv:{rate:"Average growth a year", gain:"growth", gains:"gains", B:"Past gains, now growing", G:"This year's growth", Rg:"Growth on past gains",
+       ring:"growth on past gains", old:k=>`Year ${k} gains<br>now growing`, flat:"Without compounding",
+       ofOrig:p=>`${p} growth on your £100`, ofBlue:(p,v)=>`${p} growth on past gains (${v})`, start:"Value at start", end:"Value at end"},
+  sav:{rate:"Interest a year", gain:"interest", gains:"interest", B:"Earlier interest, now earning", G:"This year's interest", Rg:"Earned by the blue coins",
+       ring:"earned by blue coins", old:k=>`Year ${k} interest<br>now earning`, flat:"Simple interest",
+       ofOrig:p=>`${p} of your £100`, ofBlue:(p,v)=>`${p} of the blue coins (${v})`, start:"Start of year", end:"End of year"}
+};
+$("kGrp").onclick = e => { const b = e.target.closest("button"); if (!b) return; stop(); KIND = b.dataset.k; drawMoney(false); };
+const START = 100, COIN = 1, MAXY = 25;
+let R = 0.07, Y = 0, timer = null, animStart = 0;
+
+const total = y => START * Math.pow(1 + R, y);
+const coinsAt = y => Math.round(total(y) / COIN);
+
+// Coin rows: your 100 coins at the bottom, then each year's new coins as their own row(s) stacked on top.
+// Coins keep one fixed size; the stack scrolls up as it grows, so nothing shrinks.
+function drawTower(animate){
+  const tw = $("tw"), box = $("tower");
+  const cs = Math.min(22, Math.max(8, Math.floor((box.clientWidth * 0.62 - 20) / 20)));
+  tw.style.setProperty("--cs", cs + "px");
+  const coins = (cls, k) => `<span class="c ${cls}"></span>`.repeat(k);
+  const bluePer = Math.round(START * R / COIN);
+  let html = `<div class="rows"><div class="yrow"><div class="cg">${coins("d", START / COIN)}</div><div class="ylbl">Your £100<br>100 coins</div></div>`;
+  for (let k = 1; k <= Y; k++){
+    const added = coinsAt(k) - coinsAt(k - 1);
+    const blue = Math.min(added, bluePer), gold = added - blue;
+    const g = total(k) - total(k - 1), goldExact = g - START * R;
+    const cur = k === Y;
+    const cg = cur ? coins("g", blue) + coins("g r", gold) : coins("s", added);
+    const lbl = cur
+      ? `Year ${k}: +${gbp(g,1)}${goldExact >= 0.005 ? `<br><b>${gbp(goldExact,1)} ${W[KIND].ring}</b>` : ""}`
+      : W[KIND].old(k);
+    html += `<div class="yrow${cur ? (animate ? " new" : " new still") : ""}"><div class="cg">${cg}</div><div class="ylbl">${lbl}</div></div>`;
+  }
+  tw.innerHTML = html + "</div>";
+  tw.querySelectorAll(".still .c").forEach(el => el.style.animation = "none");
+  const h = tw.offsetHeight, H = box.clientHeight;
+  tw.style.transform = `translateY(${Math.max(0, h - H)}px)`;
+}
+
+function drawMoney(animate){
+  $("rGrp").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.r === R));
+  $("kGrp").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === KIND));
+  const w = W[KIND];
+  $("rLbl").textContent = w.rate; $("lgB").textContent = w.B; $("lgG").textContent = w.G; $("lgR").textContent = w.Rg;
+  const tot = total(Y), prev = total(Y - 1);
+  $("yr").textContent = Y;
+  countTo($("total"), tot, v => gbp(v));
+  $("totSub").textContent = `${coinsAt(Y).toLocaleString("en-GB")} × £1 coins`;
+  $("back").disabled = Y <= 0;
+  $("addYear").disabled = Y >= MAXY;
+  const pct = Math.round(R * 100) + "%";
+
+  const note = $("mnote");
+  if (Y === 0){
+    note.innerHTML = KIND === "inv"
+      ? `You invest <strong>£100</strong>, shown as one hundred £1 coins. Suppose your investments rise by ${pct} a year on average. That rise applies to <strong>everything you hold</strong>, including past gains. Tap <strong>Next year</strong>.`
+      : `You save <strong>£100</strong>: one hundred £1 coins. Each year, every coin in the account earns ${pct} interest, as long as you leave the interest in. Tap <strong>Next year</strong>.`;
+  } else {
+    const fromOrig = START * R, fromInt = (prev - START) * R;
+    const ledger = `<div class="ledger">
+      <div class="row"><span>${w.start} of year ${Y}</span><span>${gbp(prev,1)}</span></div>
+      <div class="row bl"><span>${w.ofOrig(pct)}</span><span>+ ${gbp(fromOrig,1)}</span></div>
+      <div class="row hl"><span>${w.ofBlue(pct, gbp(prev - START,1))}</span><span>+ ${gbp(fromInt,1)}</span></div>
+      <div class="row tot2"><span>${w.end} of year ${Y}</span><span>${gbp(tot,1)}</span></div></div>`;
+    let say;
+    if (KIND === "inv"){
+      if (Y === 1) say = `Your £100 grew by <span class="g">${gbp(fromOrig)}</span> (the gold row). You keep it invested, so next year that gain turns blue and grows along with everything else.`;
+      else if (Y === 2) say = `Last year's gain turned <span class="b">blue</span>: it's now part of your portfolio's value. When the portfolio rose ${pct}, that gain rose too, adding <span class="b">${gbp(fromInt,1)}</span> (the ringed coins). Your gains are making gains.`;
+      else say = fromInt >= fromOrig
+        ? `Your past gains (${gbp(prev - START)}) now add <span class="b">more each year than your original £100 does</span>. The bigger the portfolio, the more each % rise is worth.`
+        : `Your past gains have grown to ${gbp(prev - START)}, so this year's ${pct} rise added <span class="b">${gbp(fromInt,1)}</span> on them (ringed coins). Each % rise applies to a bigger pot than the year before.`;
+    } else
+    if (Y === 1) say = `Your 100 grey coins earned <span class="g">${gbp(fromOrig)}</span> of interest: the gold row. Next year those gold coins turn blue and start earning too.`;
+    else if (Y === 2) say = `Last year's gold coins turned <span class="b">blue</span>: they're part of your pot now. This year they earned <span class="b">${gbp(fromInt,1)}</span> of their own (the ringed coins). Interest is earning interest. That's compounding.`;
+    else say = fromInt >= fromOrig
+        ? `The blue pile (${gbp(prev - START)}) now earns <span class="b">more each year than your original £100 does</span>. Every year it grows, so next year's gold row is longer again.`
+        : `The blue pile has grown to ${gbp(prev - START)}, so this year it earned <span class="b">${gbp(fromInt,1)}</span> (ringed coins). Your £100 still earns ${gbp(fromOrig)} a year. Watch the ringed part of each gold row grow.`;
+    note.innerHTML = say + ledger;
+  }
+  drawBars();
+  drawTower(animate);
+}
+
+function drawBars(){
+  const row = $("barrow"); row.innerHTML = "";
+  const flat = START * R;
+  const maxG = total(MAXY) - total(MAXY - 1);
+  const h = 84;
+  $("barMax").textContent = `Year ${MAXY}: ${gbp(maxG)}`;
+  for (let k = 1; k <= MAXY; k++){
+    const g = total(k) - total(k - 1);
+    const b = document.createElement("div");
+    b.className = "bar" + (k <= Y ? " on" : "") + (k === Y ? " now" : "");
+    b.innerHTML = `<div class="bs" style="height:${flat / maxG * h}px"></div><div class="bg" style="height:${(g - flat) / maxG * h}px"></div>`;
+    b.title = `Year ${k}: +${gbp(g)}`;
+    row.appendChild(b);
+  }
+  const f = document.createElement("div"); f.className = "flat";
+  f.style.bottom = (flat / maxG * h) + "px";
+  f.innerHTML = `<span>${W[KIND].flat}: ${gbp(flat)} every year</span>`;
+  row.appendChild(f);
+}
+
+const hit = new Set();
+function milestone(key, msg, el){ if (hit.has(key)) return; hit.add(key); toast(msg); sfx.chime(); buzz([15,40,15]); burst(el); }
+function step(d){
+  Y = Math.max(0, Math.min(MAXY, Y + d)); drawMoney(d > 0);
+  if (d > 0){
+    sfx.coin(Y); buzz(12);
+    const tot = total(Y), fromInt = (total(Y-1) - START) * R;
+    if (Y === 2) milestone("y2-"+R+KIND, KIND === "inv" ? "Your gains just made gains!" : "Interest is earning interest!", $("tower"));
+    if (tot >= 2*START) milestone("dbl-"+R, `Doubled! £100 is now ${gbp(tot)}`, $("total"));
+    if (fromInt >= START * R) milestone("over-"+R, "Your gains now out-earn your £100", $("tower"));
+    if (tot >= 10*START) milestone("x10-"+R, "10× your money!", $("total"));
+  }
+}
+function stop(){ clearInterval(timer); timer = null; $("play").textContent = "▶"; $("play").setAttribute("aria-label","Play"); }
+$("addYear").onclick = () => { stop(); step(1); };
+$("back").onclick = () => { stop(); step(-1); };
+$("play").onclick = () => {
+  if (timer) return stop();
+  if (Y >= MAXY) Y = 0;
+  $("play").textContent = "❚❚"; $("play").setAttribute("aria-label","Pause");
+  step(1);
+  timer = setInterval(() => { step(1); if (Y >= MAXY) stop(); }, 1400);
+};
+$("rGrp").onclick = e => { const b = e.target.closest("button"); if (!b) return; stop(); R = +b.dataset.r; Y = 0; drawMoney(false); };
+$("mReset").onclick = () => { stop(); Y = 0; drawMoney(false); };
+$("mAbout").onclick = () => $("aboutM").showModal();
+window.addEventListener("resize", () => { if (!$("money").hidden) drawTower(false); });
+
+const startTab = (location.hash || "").slice(1);
+drawGoal();
+showTab(TABS[startTab] ? startTab : "money");
+</script>
+<script>
+
+</script>
+</body>
+</html>
